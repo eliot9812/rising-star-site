@@ -1,10 +1,16 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { notices } from '@/data/mockData';
 import { Bell } from 'lucide-react';
 
 const NewsTicker = () => {
+  const navigate = useNavigate();
   // Duplicate notices for seamless loop
   const tickerContent = [...notices, ...notices];
+
+  const handleNoticeClick = (noticeId: string) => {
+    // Navigate to notices page with highlight parameter
+    navigate(`/notices?highlight=${noticeId}`);
+  };
 
   return (
     <div className="bg-secondary text-secondary-foreground overflow-hidden">
@@ -19,10 +25,10 @@ const NewsTicker = () => {
         <div className="overflow-hidden flex-1">
           <div className="animate-ticker flex whitespace-nowrap py-2">
             {tickerContent.map((notice, index) => (
-              <Link 
+              <button 
                 key={`${notice.id}-${index}`} 
-                to={`/notices/${notice.id}`}
-                className="inline-flex items-center px-8 hover:text-primary-foreground hover:bg-secondary-foreground/10 transition-colors cursor-pointer group"
+                onClick={() => handleNoticeClick(notice.id)}
+                className="inline-flex items-center px-8 hover:text-primary-foreground hover:bg-secondary-foreground/10 transition-colors cursor-pointer group text-left"
               >
                 <span className="text-sm group-hover:underline">
                   {notice.isNew && (
@@ -33,7 +39,7 @@ const NewsTicker = () => {
                   {notice.title}
                 </span>
                 <span className="mx-8 text-secondary-foreground/50">•</span>
-              </Link>
+              </button>
             ))}
           </div>
         </div>
