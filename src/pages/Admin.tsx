@@ -29,8 +29,14 @@ const Admin = () => {
 
   // Edit states
   const [editingNotice, setEditingNotice] = useState<Notice | null>(null);
-  const [newNotice, setNewNotice] = useState({ title: '', isNew: true });
-  const [newImage, setNewImage] = useState({ src: '', alt: '', category: '' });
+  const [newNotice, setNewNotice] = useState({ title: '', description: '', fullContent: '', image: '', isNew: true });
+  // Gallery state with file-based upload support
+  const [newImage, setNewImage] = useState<{ file: File | null; preview: string; alt: string; category: string }>({ 
+    file: null, 
+    preview: '', 
+    alt: '', 
+    category: '' 
+  });
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -63,11 +69,14 @@ const Admin = () => {
     const notice: Notice = {
       id: Date.now().toString(),
       title: newNotice.title,
+      description: newNotice.description || newNotice.title,
+      fullContent: newNotice.fullContent || newNotice.description || newNotice.title,
       date: new Date().toISOString().split('T')[0],
+      image: newNotice.image || undefined,
       isNew: newNotice.isNew,
     };
     setNotices([notice, ...notices]);
-    setNewNotice({ title: '', isNew: true });
+    setNewNotice({ title: '', description: '', fullContent: '', image: '', isNew: true });
     toast({ title: 'Notice Added', description: 'New notice has been published.' });
   };
 
@@ -83,18 +92,34 @@ const Admin = () => {
     toast({ title: 'Notice Deleted', description: 'Notice has been removed.' });
   };
 
-  // Gallery Management
+  // Gallery Management - Using file input with Object URLs for frontend-only operation
+  // TODO: Backend Integration - Replace Object URL with actual upload API
+  const handleImageFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Create Object URL for preview - this is frontend-only
+      const preview = URL.createObjectURL(file);
+      setNewImage({ ...newImage, file, preview });
+    }
+  };
+
   const addImage = () => {
-    if (!newImage.src.trim() || !newImage.alt.trim()) return;
+    if (!newImage.preview || !newImage.alt.trim()) {
+      toast({ title: 'Error', description: 'Please select an image and provide a description.', variant: 'destructive' });
+      return;
+    }
+    
+    // TODO: Backend Integration - Upload file to server/storage and get permanent URL
+    // Currently using Object URL which works for current session only
     const image: GalleryImage = {
       id: Date.now().toString(),
-      src: newImage.src,
+      src: newImage.preview, // In production, replace with uploaded file URL
       alt: newImage.alt,
       category: newImage.category || 'General',
       date: new Date().toISOString().split('T')[0],
     };
     setGallery([image, ...gallery]);
-    setNewImage({ src: '', alt: '', category: '' });
+    setNewImage({ file: null, preview: '', alt: '', category: '' });
     toast({ title: 'Image Added', description: 'New image has been added to gallery.' });
   };
 
@@ -275,26 +300,59 @@ const Admin = () => {
               {/* Add Notice Form */}
               <div className="bg-card rounded-xl p-6 shadow-md">
                 <h3 className="font-semibold text-foreground mb-4">Add New Notice</h3>
-                <div className="flex flex-col sm:flex-row gap-4">
-                  <Input
-                    placeholder="Enter notice title..."
-                    value={newNotice.title}
-                    onChange={(e) => setNewNotice({ ...newNotice, title: e.target.value })}
-                    className="flex-1"
-                  />
-                  <label className="flex items-center gap-2 text-sm">
-                    <input
-                      type="checkbox"
-                      checked={newNotice.isNew}
-                      onChange={(e) => setNewNotice({ ...newNotice, isNew: e.target.checked })}
-                      className="rounded border-border"
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="notice-title" className="block mb-2">Title *</Label>
+                    <Input
+                      id="notice-title"
+                      placeholder="Enter notice title..."
+                      value={newNotice.title}
+                      onChange={(e) => setNewNotice({ ...newNotice, title: e.target.value })}
                     />
-                    Mark as New
-                  </label>
-                  <Button onClick={addNotice}>
-                    <Plus className="w-4 h-4" />
-                    Add Notice
-                  </Button>
+                  </div>
+                  <div>
+                    <Label htmlFor="notice-desc" className="block mb-2">Short Description</Label>
+                    <Input
+                      id="notice-desc"
+                      placeholder="Brief description for listing..."
+                      value={newNotice.description}
+                      onChange={(e) => setNewNotice({ ...newNotice, description: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="notice-content" className="block mb-2">Full Content</Label>
+                    <Textarea
+                      id="notice-content"
+                      placeholder="Full notice content... (Use empty lines to separate paragraphs)"
+                      value={newNotice.fullContent}
+                      onChange={(e) => setNewNotice({ ...newNotice, fullContent: e.target.value })}
+                      rows={4}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="notice-image" className="block mb-2">Image URL (optional)</Label>
+                    <Input
+                      id="notice-image"
+                      placeholder="https://example.com/image.jpg"
+                      value={newNotice.image}
+                      onChange={(e) => setNewNotice({ ...newNotice, image: e.target.value })}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <label className="flex items-center gap-2 text-sm">
+                      <input
+                        type="checkbox"
+                        checked={newNotice.isNew}
+                        onChange={(e) => setNewNotice({ ...newNotice, isNew: e.target.checked })}
+                        className="rounded border-border"
+                      />
+                      Mark as New
+                    </label>
+                    <Button onClick={addNotice} disabled={!newNotice.title.trim()}>
+                      <Plus className="w-4 h-4" />
+                      Add Notice
+                    </Button>
+                  </div>
                 </div>
               </div>
 
@@ -303,10 +361,28 @@ const Admin = () => {
                 <div className="bg-card rounded-xl p-6 shadow-md border-2 border-primary">
                   <h3 className="font-semibold text-foreground mb-4">Edit Notice</h3>
                   <div className="space-y-4">
-                    <Input
-                      value={editingNotice.title}
-                      onChange={(e) => setEditingNotice({ ...editingNotice, title: e.target.value })}
-                    />
+                    <div>
+                      <Label className="block mb-2">Title</Label>
+                      <Input
+                        value={editingNotice.title}
+                        onChange={(e) => setEditingNotice({ ...editingNotice, title: e.target.value })}
+                      />
+                    </div>
+                    <div>
+                      <Label className="block mb-2">Description</Label>
+                      <Input
+                        value={editingNotice.description}
+                        onChange={(e) => setEditingNotice({ ...editingNotice, description: e.target.value })}
+                      />
+                    </div>
+                    <div>
+                      <Label className="block mb-2">Full Content</Label>
+                      <Textarea
+                        value={editingNotice.fullContent}
+                        onChange={(e) => setEditingNotice({ ...editingNotice, fullContent: e.target.value })}
+                        rows={4}
+                      />
+                    </div>
                     <div className="flex gap-4">
                       <Button onClick={updateNotice}>Save Changes</Button>
                       <Button variant="outline" onClick={() => setEditingNotice(null)}>Cancel</Button>
@@ -352,30 +428,72 @@ const Admin = () => {
           {/* Gallery Tab */}
           {activeTab === 'gallery' && (
             <div className="space-y-6">
-              {/* Add Image Form */}
+              {/* Add Image Form - File-based Upload */}
               <div className="bg-card rounded-xl p-6 shadow-md">
                 <h3 className="font-semibold text-foreground mb-4">Add New Image</h3>
+                
+                {/* Image Preview */}
+                {newImage.preview && (
+                  <div className="mb-4 relative w-48 h-48 rounded-lg overflow-hidden border-2 border-primary">
+                    <img 
+                      src={newImage.preview} 
+                      alt="Preview" 
+                      className="w-full h-full object-cover"
+                    />
+                    <button
+                      onClick={() => setNewImage({ file: null, preview: '', alt: '', category: '' })}
+                      className="absolute top-2 right-2 w-6 h-6 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                )}
+                
                 <div className="grid sm:grid-cols-3 gap-4">
-                  <Input
-                    placeholder="Image URL"
-                    value={newImage.src}
-                    onChange={(e) => setNewImage({ ...newImage, src: e.target.value })}
-                  />
-                  <Input
-                    placeholder="Image description"
-                    value={newImage.alt}
-                    onChange={(e) => setNewImage({ ...newImage, alt: e.target.value })}
-                  />
-                  <Input
-                    placeholder="Category"
-                    value={newImage.category}
-                    onChange={(e) => setNewImage({ ...newImage, category: e.target.value })}
-                  />
+                  {/* File Input for Image Selection */}
+                  <div>
+                    <Label htmlFor="image-upload" className="block mb-2 text-sm font-medium">
+                      Select Image *
+                    </Label>
+                    <Input
+                      id="image-upload"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageFileChange}
+                      className="cursor-pointer"
+                    />
+                    {/* TODO: Backend Integration - Connect to file upload API */}
+                  </div>
+                  <div>
+                    <Label htmlFor="image-alt" className="block mb-2 text-sm font-medium">
+                      Description *
+                    </Label>
+                    <Input
+                      id="image-alt"
+                      placeholder="Image description"
+                      value={newImage.alt}
+                      onChange={(e) => setNewImage({ ...newImage, alt: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="image-category" className="block mb-2 text-sm font-medium">
+                      Category
+                    </Label>
+                    <Input
+                      id="image-category"
+                      placeholder="e.g., Campus, Events, Sports"
+                      value={newImage.category}
+                      onChange={(e) => setNewImage({ ...newImage, category: e.target.value })}
+                    />
+                  </div>
                 </div>
-                <Button onClick={addImage} className="mt-4">
+                <Button onClick={addImage} className="mt-4" disabled={!newImage.preview}>
                   <Plus className="w-4 h-4" />
                   Add Image
                 </Button>
+                <p className="text-xs text-muted-foreground mt-2">
+                  * Images are stored locally in this session. Backend integration required for permanent storage.
+                </p>
               </div>
 
               {/* Gallery Grid */}

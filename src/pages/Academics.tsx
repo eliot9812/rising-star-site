@@ -1,5 +1,6 @@
 import { BookOpen, Users, Clock, Award, FlaskConical, Monitor, Library, Dumbbell } from 'lucide-react';
 import { classes, subjects } from '@/data/mockData';
+import PageHero from '@/components/shared/PageHero';
 
 const Academics = () => {
   const academicFeatures = [
@@ -18,17 +19,11 @@ const Academics = () => {
 
   return (
     <div>
-      {/* Hero Section */}
-      <section className="gradient-secondary py-20">
-        <div className="container-school text-center">
-          <h1 className="font-heading text-4xl md:text-5xl font-bold text-secondary-foreground mb-4 animate-fade-in">
-            Academics
-          </h1>
-          <p className="text-secondary-foreground/90 text-lg max-w-2xl mx-auto">
-            Discover our comprehensive academic programs designed to nurture young minds
-          </p>
-        </div>
-      </section>
+      <PageHero 
+        title="Academics" 
+        subtitle="Discover our comprehensive academic programs designed to nurture young minds"
+        breadcrumbs={[{ label: 'Academics' }]}
+      />
 
       {/* Classes Offered */}
       <section className="section-padding">

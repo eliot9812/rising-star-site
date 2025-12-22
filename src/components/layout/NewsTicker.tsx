@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { notices } from '@/data/mockData';
 import { Bell } from 'lucide-react';
 
@@ -8,15 +9,22 @@ const NewsTicker = () => {
   return (
     <div className="bg-secondary text-secondary-foreground overflow-hidden">
       <div className="container-school flex items-center">
-        <div className="flex-shrink-0 bg-primary px-4 py-2 flex items-center gap-2">
+        <Link 
+          to="/notices"
+          className="flex-shrink-0 bg-primary px-4 py-2 flex items-center gap-2 hover:bg-primary/90 transition-colors"
+        >
           <Bell className="w-4 h-4 animate-bounce-soft" />
           <span className="font-semibold text-sm">Notices</span>
-        </div>
+        </Link>
         <div className="overflow-hidden flex-1">
           <div className="animate-ticker flex whitespace-nowrap py-2">
             {tickerContent.map((notice, index) => (
-              <span key={`${notice.id}-${index}`} className="inline-flex items-center px-8">
-                <span className="text-sm">
+              <Link 
+                key={`${notice.id}-${index}`} 
+                to={`/notices/${notice.id}`}
+                className="inline-flex items-center px-8 hover:text-primary-foreground hover:bg-secondary-foreground/10 transition-colors cursor-pointer group"
+              >
+                <span className="text-sm group-hover:underline">
                   {notice.isNew && (
                     <span className="bg-school-gold text-school-dark text-xs font-bold px-2 py-0.5 rounded mr-2">
                       NEW
@@ -25,7 +33,7 @@ const NewsTicker = () => {
                   {notice.title}
                 </span>
                 <span className="mx-8 text-secondary-foreground/50">•</span>
-              </span>
+              </Link>
             ))}
           </div>
         </div>

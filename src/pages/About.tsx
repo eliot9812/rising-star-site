@@ -1,20 +1,15 @@
 import { principal, vicePrincipal, schoolInfo } from '@/data/mockData';
 import { Target, Eye, Heart, Award } from 'lucide-react';
+import PageHero from '@/components/shared/PageHero';
 
 const About = () => {
   return (
     <div>
-      {/* Hero Section */}
-      <section className="gradient-primary py-20">
-        <div className="container-school text-center">
-          <h1 className="font-heading text-4xl md:text-5xl font-bold text-primary-foreground mb-4 animate-fade-in">
-            About Us
-          </h1>
-          <p className="text-primary-foreground/90 text-lg max-w-2xl mx-auto">
-            Learn about our journey, vision, and the dedicated team behind {schoolInfo.shortName}
-          </p>
-        </div>
-      </section>
+      <PageHero 
+        title="About Us" 
+        subtitle={`Learn about our journey, vision, and the dedicated team behind ${schoolInfo.shortName}`}
+        breadcrumbs={[{ label: 'About Us' }]}
+      />
 
       {/* School Introduction */}
       <section className="section-padding">
@@ -60,7 +55,7 @@ const About = () => {
               </div>
               <h3 className="font-heading text-2xl font-bold text-foreground mb-4">Our Vision</h3>
               <p className="text-muted-foreground leading-relaxed">
-                To be a leading educational institution that nurtures globally competent individuals equipped with knowledge, skills, and values to make meaningful contributions to society. We envision a future where every student from our school becomes a responsible citizen and a lifelong learner.
+                To be a leading educational institution that nurtures globally competent individuals equipped with knowledge, skills, and values to make meaningful contributions to society.
               </p>
             </div>
             <div className="bg-card rounded-xl p-8 shadow-md hover:shadow-xl transition-all duration-300">
@@ -69,7 +64,7 @@ const About = () => {
               </div>
               <h3 className="font-heading text-2xl font-bold text-foreground mb-4">Our Mission</h3>
               <p className="text-muted-foreground leading-relaxed">
-                To provide a stimulating learning environment that encourages intellectual curiosity, creativity, and critical thinking. We are committed to fostering academic excellence while developing the whole child - emotionally, socially, and physically.
+                To provide a stimulating learning environment that encourages intellectual curiosity, creativity, and critical thinking while developing the whole child.
               </p>
             </div>
           </div>
