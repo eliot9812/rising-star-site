@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { classes, schoolInfo } from '@/data/mockData';
 import { FileText, Calendar, CreditCard, CheckCircle } from 'lucide-react';
+import PageHero from '@/components/shared/PageHero';
 
 const Admission = () => {
   const { toast } = useToast();
@@ -23,23 +24,12 @@ const Admission = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-
-    // Simulate API call - Backend integration point
     await new Promise((resolve) => setTimeout(resolve, 1500));
-
     toast({
       title: 'Application Submitted!',
       description: 'We have received your admission inquiry. Our team will contact you soon.',
     });
-
-    setFormData({
-      name: '',
-      phone: '',
-      email: '',
-      address: '',
-      classApplying: '',
-      message: '',
-    });
+    setFormData({ name: '', phone: '', email: '', address: '', classApplying: '', message: '' });
     setIsSubmitting(false);
   };
 
@@ -61,17 +51,11 @@ const Admission = () => {
 
   return (
     <div>
-      {/* Hero Section */}
-      <section className="gradient-primary py-20">
-        <div className="container-school text-center">
-          <h1 className="font-heading text-4xl md:text-5xl font-bold text-primary-foreground mb-4 animate-fade-in">
-            Admissions
-          </h1>
-          <p className="text-primary-foreground/90 text-lg max-w-2xl mx-auto">
-            Join the {schoolInfo.shortName} family and embark on a journey of excellence
-          </p>
-        </div>
-      </section>
+      <PageHero 
+        title="Admissions" 
+        subtitle={`Join the ${schoolInfo.shortName} family and embark on a journey of excellence`}
+        breadcrumbs={[{ label: 'Admissions' }]}
+      />
 
       {/* Admission Process */}
       <section className="section-padding">

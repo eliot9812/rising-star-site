@@ -6,29 +6,21 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { schoolInfo } from '@/data/mockData';
 import { MapPin, Phone, Mail, Clock, Send } from 'lucide-react';
+import PageHero from '@/components/shared/PageHero';
 
 const Contact = () => {
   const { toast } = useToast();
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    message: '',
-  });
+  const [formData, setFormData] = useState({ name: '', email: '', phone: '', message: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-
-    // Simulate API call - Backend integration point
     await new Promise((resolve) => setTimeout(resolve, 1500));
-
     toast({
       title: 'Message Sent!',
       description: 'Thank you for contacting us. We will get back to you soon.',
     });
-
     setFormData({ name: '', email: '', phone: '', message: '' });
     setIsSubmitting(false);
   };
@@ -42,17 +34,11 @@ const Contact = () => {
 
   return (
     <div>
-      {/* Hero Section */}
-      <section className="gradient-primary py-20">
-        <div className="container-school text-center">
-          <h1 className="font-heading text-4xl md:text-5xl font-bold text-primary-foreground mb-4 animate-fade-in">
-            Contact Us
-          </h1>
-          <p className="text-primary-foreground/90 text-lg max-w-2xl mx-auto">
-            We'd love to hear from you. Get in touch with us today.
-          </p>
-        </div>
-      </section>
+      <PageHero 
+        title="Contact Us" 
+        subtitle="We'd love to hear from you. Get in touch with us today."
+        breadcrumbs={[{ label: 'Contact' }]}
+      />
 
       {/* Contact Section */}
       <section className="section-padding">
