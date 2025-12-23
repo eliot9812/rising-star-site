@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   GraduationCap, Bell, Image, Mail, LogOut, Plus, Trash2, Edit2, 
-  Eye, EyeOff, Menu, X, Home, ExternalLink
+  Eye, EyeOff, Menu, X, Home, Check
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -19,6 +19,11 @@ import {
   DialogFooter,
   DialogDescription,
 } from '@/components/ui/dialog';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 type AdminTab = 'notices' | 'gallery' | 'messages';
 
@@ -43,13 +48,9 @@ const Admin = () => {
   const [editingNotice, setEditingNotice] = useState<Notice | null>(null);
   const [newNotice, setNewNotice] = useState({ title: '', description: '', fullContent: '', image: '', isNew: true });
   
-  // Gallery state with file-based upload support
-  const [newImage, setNewImage] = useState<{ file: File | null; preview: string; alt: string; category: string }>({ 
-    file: null, 
-    preview: '', 
-    alt: '', 
-    category: '' 
-  });
+  // Gallery state with multi-file upload support
+  // TODO: Backend Integration - Replace Object URLs with actual upload API
+  const [selectedFiles, setSelectedFiles] = useState<{ file: File; preview: string; alt: string }[]>([]);
 
   // Message modal state
   const [viewingMessage, setViewingMessage] = useState<ContactMessage | null>(null);
@@ -109,36 +110,53 @@ const Admin = () => {
     toast({ title: 'Notice Deleted', description: 'Notice has been removed.' });
   };
 
-  // Gallery Management - Using file input with Object URLs for frontend-only operation
-  // TODO: Backend Integration - Replace Object URL with actual upload API
-  const handleImageFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      // Create Object URL for preview - this is frontend-only
-      const preview = URL.createObjectURL(file);
-      setNewImage({ ...newImage, file, preview });
+  // Gallery Management - Multi-file upload with Object URLs for frontend-only operation
+  // TODO: Backend Integration - Replace Object URLs with actual upload API
+  const handleImageFilesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length > 0) {
+      const newFiles = files.map(file => ({
+        file,
+        preview: URL.createObjectURL(file),
+        alt: file.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' ') // Default alt from filename
+      }));
+      setSelectedFiles([...selectedFiles, ...newFiles]);
     }
+    // Reset input to allow selecting same files again
+    e.target.value = '';
   };
 
-  const addImage = () => {
-    if (!newImage.preview || !newImage.alt.trim()) {
-      toast({ title: 'Error', description: 'Please select an image and provide a description.', variant: 'destructive' });
+  const updateFileAlt = (index: number, alt: string) => {
+    setSelectedFiles(selectedFiles.map((f, i) => i === index ? { ...f, alt } : f));
+  };
+
+  const removeSelectedFile = (index: number) => {
+    URL.revokeObjectURL(selectedFiles[index].preview);
+    setSelectedFiles(selectedFiles.filter((_, i) => i !== index));
+  };
+
+  const addImages = () => {
+    if (selectedFiles.length === 0) {
+      toast({ title: 'Error', description: 'Please select at least one image.', variant: 'destructive' });
       return;
     }
-    
-    // TODO: Backend Integration - Upload file to server/storage and get permanent URL
-    // Currently using Object URL which works for current session only
-    const image: GalleryImage = {
-      id: Date.now().toString(),
-      src: newImage.preview, // In production, replace with uploaded file URL
-      alt: newImage.alt,
-      category: newImage.category || 'General',
+
+    // TODO: Backend Integration - Upload files to server/storage and get permanent URLs
+    // Currently using Object URLs which work for current session only
+    const newImages: GalleryImage[] = selectedFiles.map((file, index) => ({
+      id: `${Date.now()}-${index}`,
+      src: file.preview, // In production, replace with uploaded file URL
+      alt: file.alt || `Image ${index + 1}`,
       date: new Date().toISOString().split('T')[0],
-    };
-    setGallery([image, ...gallery]);
-    setNewImage({ file: null, preview: '', alt: '', category: '' });
+    }));
+
+    setGallery([...newImages, ...gallery]);
+    setSelectedFiles([]);
     setShowAddImageForm(false);
-    toast({ title: 'Image Added', description: 'New image has been added to gallery.' });
+    toast({ 
+      title: 'Images Added', 
+      description: `${newImages.length} image(s) added to gallery.` 
+    });
   };
 
   const deleteImage = (id: string) => {
@@ -478,88 +496,88 @@ const Admin = () => {
               {!showAddImageForm && (
                 <Button onClick={() => setShowAddImageForm(true)} className="gap-2">
                   <Plus className="w-4 h-4" />
-                  Add Gallery Image
+                  Add Gallery Images
                 </Button>
               )}
 
-              {/* Add Image Form - File-based Upload */}
+              {/* Add Images Form - Multi-file Upload */}
               {showAddImageForm && (
                 <div className="bg-card rounded-xl p-6 shadow-md border border-border">
                   <div className="flex items-center justify-between mb-4">
-                    <h3 className="font-semibold text-foreground">Add New Image</h3>
+                    <h3 className="font-semibold text-foreground">Add New Images</h3>
                     <Button variant="ghost" size="icon" onClick={() => {
                       setShowAddImageForm(false);
-                      setNewImage({ file: null, preview: '', alt: '', category: '' });
+                      selectedFiles.forEach(f => URL.revokeObjectURL(f.preview));
+                      setSelectedFiles([]);
                     }}>
                       <X className="w-4 h-4" />
                     </Button>
                   </div>
                   
-                  {/* Image Preview */}
-                  {newImage.preview && (
-                    <div className="mb-4 relative w-48 h-48 rounded-lg overflow-hidden border-2 border-primary">
-                      <img 
-                        src={newImage.preview} 
-                        alt="Preview" 
-                        className="w-full h-full object-cover"
-                      />
-                      <button
-                        onClick={() => setNewImage({ file: null, preview: '', alt: '', category: '' })}
-                        className="absolute top-2 right-2 w-6 h-6 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
+                  {/* File Input for Multiple Image Selection */}
+                  <div className="mb-4">
+                    <Label htmlFor="image-upload" className="block mb-2 text-sm font-medium">
+                      Select Images (Multiple)
+                    </Label>
+                    <Input
+                      id="image-upload"
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      onChange={handleImageFilesChange}
+                      className="cursor-pointer"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      You can select multiple images at once. Click again to add more.
+                    </p>
+                    {/* TODO: Backend Integration - Connect to file upload API */}
+                  </div>
+
+                  {/* Selected Images Preview */}
+                  {selectedFiles.length > 0 && (
+                    <div className="mb-4">
+                      <Label className="block mb-2 text-sm font-medium">
+                        Selected Images ({selectedFiles.length})
+                      </Label>
+                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                        {selectedFiles.map((file, index) => (
+                          <div key={index} className="relative group">
+                            <div className="aspect-square rounded-lg overflow-hidden border-2 border-border">
+                              <img 
+                                src={file.preview} 
+                                alt={file.alt} 
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                            <button
+                              onClick={() => removeSelectedFile(index)}
+                              className="absolute -top-2 -right-2 w-6 h-6 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center shadow-md hover:bg-destructive/90 transition-colors"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                            <Input
+                              placeholder="Description"
+                              value={file.alt}
+                              onChange={(e) => updateFileAlt(index, e.target.value)}
+                              className="mt-2 text-xs h-8"
+                            />
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   )}
-                  
-                  <div className="grid sm:grid-cols-3 gap-4">
-                    {/* File Input for Image Selection */}
-                    <div>
-                      <Label htmlFor="image-upload" className="block mb-2 text-sm font-medium">
-                        Select Image *
-                      </Label>
-                      <Input
-                        id="image-upload"
-                        type="file"
-                        accept="image/*"
-                        onChange={handleImageFileChange}
-                        className="cursor-pointer"
-                      />
-                      {/* TODO: Backend Integration - Connect to file upload API */}
-                    </div>
-                    <div>
-                      <Label htmlFor="image-alt" className="block mb-2 text-sm font-medium">
-                        Description *
-                      </Label>
-                      <Input
-                        id="image-alt"
-                        placeholder="Image description"
-                        value={newImage.alt}
-                        onChange={(e) => setNewImage({ ...newImage, alt: e.target.value })}
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="image-category" className="block mb-2 text-sm font-medium">
-                        Category
-                      </Label>
-                      <Input
-                        id="image-category"
-                        placeholder="e.g., Campus, Events, Sports"
-                        value={newImage.category}
-                        onChange={(e) => setNewImage({ ...newImage, category: e.target.value })}
-                      />
-                    </div>
-                  </div>
-                  <div className="flex gap-2 mt-4">
+
+                  <div className="flex gap-2">
                     <Button variant="outline" onClick={() => {
                       setShowAddImageForm(false);
-                      setNewImage({ file: null, preview: '', alt: '', category: '' });
+                      selectedFiles.forEach(f => URL.revokeObjectURL(f.preview));
+                      setSelectedFiles([]);
                     }}>
                       Cancel
                     </Button>
-                    <Button onClick={addImage} disabled={!newImage.preview}>
+                    <Button onClick={addImages} disabled={selectedFiles.length === 0}>
                       <Plus className="w-4 h-4" />
-                      Add Image
+                      Add {selectedFiles.length > 0 ? `${selectedFiles.length} Image${selectedFiles.length > 1 ? 's' : ''}` : 'Images'}
                     </Button>
                   </div>
                   <p className="text-xs text-muted-foreground mt-2">
@@ -592,7 +610,6 @@ const Admin = () => {
                       </div>
                       <div className="absolute bottom-0 left-0 right-0 p-2 bg-foreground/80 text-primary-foreground">
                         <p className="text-sm truncate">{image.alt}</p>
-                        <p className="text-xs opacity-70">{image.category}</p>
                       </div>
                     </div>
                   ))}
@@ -645,16 +662,55 @@ const Admin = () => {
                           <p className="text-sm text-foreground truncate mt-1">{message.message}</p>
                           <p className="text-xs text-muted-foreground mt-1">{message.date}</p>
                         </div>
-                        <div className="flex gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="gap-1"
-                            onClick={() => setViewingMessage(message)}
-                          >
-                            <ExternalLink className="w-4 h-4" />
-                            View
-                          </Button>
+                        
+                        {/* Action Buttons - Right aligned with icons and tooltips */}
+                        <div className="flex gap-2 shrink-0">
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                size="icon"
+                                className="bg-primary hover:bg-primary/90"
+                                onClick={() => setViewingMessage(message)}
+                              >
+                                <Eye className="w-4 h-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>View Message</TooltipContent>
+                          </Tooltip>
+                          
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                size="icon"
+                                variant="outline"
+                                className={cn(
+                                  message.isRead 
+                                    ? 'border-muted-foreground text-muted-foreground hover:bg-muted' 
+                                    : 'border-green-500 text-green-600 hover:bg-green-50 dark:hover:bg-green-950'
+                                )}
+                                onClick={() => toggleMessageRead(message.id)}
+                              >
+                                {message.isRead ? <EyeOff className="w-4 h-4" /> : <Check className="w-4 h-4" />}
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              {message.isRead ? 'Mark as Unread' : 'Mark as Read'}
+                            </TooltipContent>
+                          </Tooltip>
+                          
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                size="icon"
+                                variant="outline"
+                                className="border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                                onClick={() => deleteMessage(message.id)}
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Delete Message</TooltipContent>
+                          </Tooltip>
                         </div>
                       </div>
                     ))}

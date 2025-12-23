@@ -20,6 +20,8 @@ const Index = () => {
           className="absolute inset-0 bg-cover bg-center"
           style={{ backgroundImage: `url(${heroImage})` }}
         >
+          {/* Dark overlay for text readability */}
+          <div className="absolute inset-0 bg-foreground/50" />
           <div className="absolute inset-0 gradient-hero" />
         </div>
         
