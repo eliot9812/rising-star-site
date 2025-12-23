@@ -14,7 +14,6 @@ export interface GalleryImage {
   id: string;
   src: string;
   alt: string;
-  category: string;
   date: string;
 }
 
@@ -88,14 +87,14 @@ export const notices: Notice[] = [
 ];
 
 export const galleryImages: GalleryImage[] = [
-  { id: '1', src: 'https://images.unsplash.com/photo-1580582932707-520aed937b7b?w=800', alt: 'School Building', category: 'Campus', date: '2024-12-01' },
-  { id: '2', src: 'https://images.unsplash.com/photo-1427504494785-3a9ca7044f45?w=800', alt: 'Students in Classroom', category: 'Academics', date: '2024-11-28' },
-  { id: '3', src: 'https://images.unsplash.com/photo-1546519638-68e109498ffc?w=800', alt: 'Sports Day', category: 'Sports', date: '2024-11-25' },
-  { id: '4', src: 'https://images.unsplash.com/photo-1571260899304-425eee4c7efc?w=800', alt: 'Library', category: 'Facilities', date: '2024-11-20' },
-  { id: '5', src: 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=800', alt: 'Science Lab', category: 'Academics', date: '2024-11-15' },
-  { id: '6', src: 'https://images.unsplash.com/photo-1594608661623-aa0bd3a69d98?w=800', alt: 'Cultural Event', category: 'Events', date: '2024-11-10' },
-  { id: '7', src: 'https://images.unsplash.com/photo-1577896851231-70ef18881754?w=800', alt: 'Award Ceremony', category: 'Events', date: '2024-11-05' },
-  { id: '8', src: 'https://images.unsplash.com/photo-1509062522246-3755977927d7?w=800', alt: 'Computer Lab', category: 'Facilities', date: '2024-11-01' },
+  { id: '1', src: 'https://images.unsplash.com/photo-1580582932707-520aed937b7b?w=800', alt: 'School Building', date: '2024-12-01' },
+  { id: '2', src: 'https://images.unsplash.com/photo-1427504494785-3a9ca7044f45?w=800', alt: 'Students in Classroom', date: '2024-11-28' },
+  { id: '3', src: 'https://images.unsplash.com/photo-1546519638-68e109498ffc?w=800', alt: 'Sports Day', date: '2024-11-25' },
+  { id: '4', src: 'https://images.unsplash.com/photo-1571260899304-425eee4c7efc?w=800', alt: 'Library', date: '2024-11-20' },
+  { id: '5', src: 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=800', alt: 'Science Lab', date: '2024-11-15' },
+  { id: '6', src: 'https://images.unsplash.com/photo-1594608661623-aa0bd3a69d98?w=800', alt: 'Cultural Event', date: '2024-11-10' },
+  { id: '7', src: 'https://images.unsplash.com/photo-1577896851231-70ef18881754?w=800', alt: 'Award Ceremony', date: '2024-11-05' },
+  { id: '8', src: 'https://images.unsplash.com/photo-1509062522246-3755977927d7?w=800', alt: 'Computer Lab', date: '2024-11-01' },
 ];
 
 export const contactMessages: ContactMessage[] = [

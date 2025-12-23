@@ -31,7 +31,7 @@ const Gallery = () => {
                   className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                 />
                 <div className="absolute inset-0 bg-foreground/0 group-hover:bg-foreground/40 transition-all duration-300 flex items-end">
-                  <div className="p-4 text-primary-foreground opacity-0 group-hover:opacity-100 transition-opacity duration-300 translate-y-4 group-hover:translate-y-0">
+                  <div className="p-3 text-primary-foreground opacity-0 group-hover:opacity-100 transition-opacity duration-300 translate-y-4 group-hover:translate-y-0 w-full bg-gradient-to-t from-foreground/80 to-transparent">
                     <p className="font-medium text-sm">{image.alt}</p>
                   </div>
                 </div>
