@@ -108,10 +108,10 @@ export const schoolInfo = {
   name: 'The Rising English Secondary Boarding School',
   shortName: 'TRESBS',
   tagline: 'Nurturing Minds, Building Futures',
-  address: 'Kathmandu, Nepal',
-  phone: '+977-1-4567890',
-  email: 'info@risingschool.edu.np',
-  website: 'www.risingschool.edu.np',
+  address: 'Sundar Haricha-10,Morang, Nepal',
+  phone: '+977-021-547985',
+  email: 'therisingenglishschool@gmail.com',
+  website: '',
   established: '1995',
   students: '1200+',
   teachers: '80+',
@@ -119,7 +119,7 @@ export const schoolInfo = {
 };
 
 export const principal = {
-  name: 'Dr. Ramesh Kumar Shrestha',
+  name: 'Gopal Prasad Pathak',
   position: 'Principal',
   image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400',
   message: `Welcome to The Rising English Secondary Boarding School. For over two decades, we have been committed to providing quality education that nurtures young minds and prepares them for the challenges of tomorrow.
@@ -156,5 +156,5 @@ export const facilities = [
   { icon: '💻', title: 'Computer Lab', description: 'Latest computers with high-speed internet' },
   { icon: '📚', title: 'Library', description: 'Extensive collection of books, journals, and digital resources' },
   { icon: '🏀', title: 'Sports Complex', description: 'Basketball court, football ground, and indoor games' },
-  { icon: '🏠', title: 'Hostel', description: 'Comfortable boarding facilities with 24/7 supervision' },
+  { icon: '🏠', title: 'Day Bodus', description: 'Day Bodus facilities with proper supervision' },
 ];

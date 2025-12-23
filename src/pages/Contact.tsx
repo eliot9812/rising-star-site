@@ -29,7 +29,7 @@ const Contact = () => {
     { icon: MapPin, title: 'Address', content: schoolInfo.address, link: null },
     { icon: Phone, title: 'Phone', content: schoolInfo.phone, link: `tel:${schoolInfo.phone}` },
     { icon: Mail, title: 'Email', content: schoolInfo.email, link: `mailto:${schoolInfo.email}` },
-    { icon: Clock, title: 'Office Hours', content: 'Sun-Fri: 9:00 AM - 5:00 PM', link: null },
+    { icon: Clock, title: 'Office Hours', content: 'Sun-Fri: 10:00 AM - 5:00 PM', link: null },
   ];
 
   return (
@@ -78,19 +78,21 @@ const Contact = () => {
                 ))}
               </div>
 
-              {/* Map Placeholder */}
-              <div className="mt-8 bg-muted rounded-xl h-64 flex items-center justify-center">
-                <div className="text-center">
-                  <MapPin className="w-12 h-12 mx-auto text-muted-foreground mb-2" />
-                  <p className="text-muted-foreground">
-                    Interactive Map Coming Soon
-                  </p>
-                  <p className="text-sm text-muted-foreground/70 mt-1">
-                    {schoolInfo.address}
-                  </p>
-                </div>
-              </div>
-            </div>
+              {/* Map Section */}
+          <div className="mt-8 bg-muted rounded-xl h-64 overflow-hidden">
+            <iframe
+              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d1782.622257587441!2d87.37826406955722!3d26.672661268316972!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x39ef6f007df59963%3A0x9937a6eebe9c4906!2sThe%20rising%20english%20boarding%20school!5e0!3m2!1sen!2snp!4v1766397407651!5m2!1sen!2snp"
+              width="100%"
+              height="100%"
+              style={{ border: 0 }}
+              allowFullScreen={true}
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+              title="School Location Map"
+              className="w-full h-full"
+            ></iframe>
+          </div>
+  </div>
 
             {/* Contact Form */}
             <div>

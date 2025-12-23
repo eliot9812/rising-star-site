@@ -17,7 +17,7 @@ const Layout = ({ children }: LayoutProps) => {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Ctrl + Alt + R to open admin panel
-      if (e.ctrlKey && e.altKey && e.key.toLowerCase() === 'r') {
+      if (e.shiftKey && e.altKey && e.key.toLowerCase() === 'r') {
         e.preventDefault();
         navigate('/admin');
       }

@@ -10,12 +10,14 @@ const Footer = () => {
           {/* School Info */}
           <div className="lg:col-span-1">
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center">
-                <GraduationCap className="w-7 h-7 text-primary-foreground" />
+              <div className="w-12 h-12 flex items-center justify-center">
+                <img src="/images/logo1.png" alt="Logo" />
+
+                {/* <GraduationCap className="w-7 h-7 text-primary-foreground" /> */}
               </div>
               <div>
                 <h3 className="font-heading font-bold text-lg">The Rising</h3>
-                <p className="text-sm text-background/70">English Secondary Boarding School</p>
+                <h4 className="text-sm text-background/70">English Secondary Boarding School</h4>
               </div>
             </div>
             <p className="text-background/70 text-sm leading-relaxed mb-4">
