@@ -150,12 +150,21 @@
     text-wrap: balance;
   }
 
+  /* Ticker animation - faster on mobile, smooth on desktop */
   .animate-ticker {
-    animation: ticker 30s linear infinite;
+    animation: ticker 15s linear infinite; /* Faster: reduced from 30s to 15s */
   }
 
+  /* Pause on hover for accessibility */
   .animate-ticker:hover {
     animation-play-state: paused;
+  }
+
+  /* Slightly faster on mobile for better readability */
+  @media (max-width: 768px) {
+    .animate-ticker {
+      animation: ticker 12s linear infinite; /* Even faster on mobile: 12s */
+    }
   }
 
   @keyframes ticker {

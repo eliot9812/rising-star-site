@@ -6,7 +6,11 @@ export interface Notice {
   description: string;
   fullContent: string;
   date: string;
-  image?: string;
+  // Attachment can be image URL, PDF URL, or object URL (for frontend-only uploads)
+  // TODO: Backend Integration - Replace with permanent storage URLs
+  attachment?: string;
+  attachmentType?: 'image' | 'pdf';
+  attachmentName?: string; // Original filename for display
   isNew: boolean;
 }
 
@@ -46,7 +50,8 @@ export const notices: Notice[] = [
     description: 'The examination schedule for the upcoming annual exams has been released. Students and parents are requested to check the academic calendar for detailed timing.',
     fullContent: 'The examination schedule for the upcoming annual exams has been released. Students and parents are requested to check the academic calendar for detailed timing.\n\nThe examinations will commence from January 20, 2025, and will continue till February 15, 2025. All students are advised to prepare well and follow the schedule strictly.\n\nKey Points:\n- Hall tickets will be distributed from January 15, 2025\n- Students must report 30 minutes before the exam\n- Carry necessary stationery items\n- Mobile phones are strictly prohibited in the examination hall\n\nFor any queries, please contact the examination cell.',
     date: '2024-12-20', 
-    image: 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=800',
+    attachment: 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=800',
+    attachmentType: 'image',
     isNew: true 
   },
   { 
@@ -55,7 +60,8 @@ export const notices: Notice[] = [
     description: 'Our school has won the prestigious Inter-School Sports Championship. Congratulations to all participating students and coaches.',
     fullContent: 'We are proud to announce that our school has won the prestigious Inter-School Sports Championship held at the National Stadium from December 10-15, 2024.\n\nOur students secured first position in multiple events including:\n- Basketball (Senior Category)\n- Football (Junior Category)\n- Athletics - 100m and 200m races\n- Table Tennis (Boys and Girls)\n\nSpecial congratulations to:\n- Rajan Sharma - Best Athlete Award\n- Anita Gurung - Best Football Player\n- The Basketball Team - Undefeated Champions\n\nWe thank all the coaches, parents, and staff for their continuous support. This victory is a testament to our commitment to holistic education.',
     date: '2024-12-18', 
-    image: 'https://images.unsplash.com/photo-1546519638-68e109498ffc?w=800',
+    attachment: 'https://images.unsplash.com/photo-1546519638-68e109498ffc?w=800',
+    attachmentType: 'image',
     isNew: true 
   },
   { 
@@ -72,7 +78,8 @@ export const notices: Notice[] = [
     description: 'The Annual Cultural Program 2025 will be held on January 15, 2025. All parents and guardians are cordially invited to attend.',
     fullContent: 'We are pleased to invite all parents and guardians to our Annual Cultural Program 2025.\n\nEvent Details:\n- Date: January 15, 2025\n- Time: 10:00 AM onwards\n- Venue: School Auditorium\n\nProgram Highlights:\n- Welcome Dance by Pre-Primary Students\n- Drama: "The Value of Education"\n- Musical Performance by School Band\n- Traditional Dance Performances\n- Prize Distribution Ceremony\n- Annual Report Presentation\n\nPlease confirm your attendance by January 10, 2025, at the school office or through the class teacher.\n\nWe look forward to your gracious presence!',
     date: '2024-12-10', 
-    image: 'https://images.unsplash.com/photo-1594608661623-aa0bd3a69d98?w=800',
+    attachment: 'https://images.unsplash.com/photo-1594608661623-aa0bd3a69d98?w=800',
+    attachmentType: 'image',
     isNew: false 
   },
   { 
@@ -81,7 +88,8 @@ export const notices: Notice[] = [
     description: 'Admissions are now open for the academic year 2025-2026 for classes Nursery to Class 10. Apply now to secure your child\'s future.',
     fullContent: 'Admissions are now open for the academic year 2025-2026 for classes Nursery to Class 10.\n\nKey Dates:\n- Application Start: December 1, 2024\n- Application Deadline: February 28, 2025\n- Entrance Test: March 10-15, 2025\n- Results: March 25, 2025\n\nDocuments Required:\n- Birth Certificate\n- Previous Academic Records\n- Character Certificate (for Class 6 and above)\n- Passport-size photographs (4 copies)\n- Parents\' ID proof\n\nWhy Choose Us:\n- Experienced and dedicated faculty\n- Modern infrastructure and facilities\n- Focus on holistic development\n- Excellent academic track record\n- Safe and nurturing environment\n\nFor more information, visit our Admission page or contact the school office.',
     date: '2024-12-05', 
-    image: 'https://images.unsplash.com/photo-1580582932707-520aed937b7b?w=800',
+    attachment: 'https://images.unsplash.com/photo-1580582932707-520aed937b7b?w=800',
+    attachmentType: 'image',
     isNew: true 
   },
 ];
@@ -120,7 +128,7 @@ export const schoolInfo = {
 export const principal = {
   name: 'Gopal Prasad Pathak',
   position: 'Principal',
-  image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400',
+  image: '',
   message: `Welcome to The Rising English Secondary Boarding School. For over two decades, we have been committed to providing quality education that nurtures young minds and prepares them for the challenges of tomorrow.
 
 Our school believes in holistic development, combining academic excellence with character building, sports, and extracurricular activities. We strive to create an environment where every student can discover their potential and grow into responsible citizens.
@@ -129,9 +137,9 @@ I am proud of our dedicated faculty, state-of-the-art facilities, and the achiev
 };
 
 export const vicePrincipal = {
-  name: 'Mrs. Sunita Adhikari',
+  name: 'Parshuram Guragai',
   position: 'Vice Principal',
-  image: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400',
+  image: 'public/images/viceprincipal.jpg',
   message: `As the Vice Principal, I am honored to be part of an institution that prioritizes both academic excellence and personal growth. Our approach to education goes beyond textbooks – we focus on developing critical thinking, creativity, and compassion in our students.
 
 We maintain a supportive learning environment where students feel encouraged to explore, question, and innovate. Our comprehensive curriculum, combined with modern teaching methodologies, ensures that every child receives the best possible education.

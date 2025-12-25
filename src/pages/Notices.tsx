@@ -2,6 +2,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { useEffect, useRef } from 'react';
 import { notices } from '@/data/mockData';
 import PageHero from '@/components/shared/PageHero';
+import NoticeAttachment from '@/components/shared/NoticeAttachment';
 import { Calendar, ArrowRight } from 'lucide-react';
 import { Helmet } from 'react-helmet-async';
 
@@ -61,15 +62,15 @@ const Notices = () => {
                     style={{ animationDelay: `${index * 0.1}s` }}
                   >
                     <div className="flex flex-col md:flex-row gap-6">
-                      {/* Image */}
-                      {notice.image && (
-                        <div className="w-full md:w-48 h-40 md:h-32 rounded-lg overflow-hidden flex-shrink-0">
-                          <img 
-                            src={notice.image} 
-                            alt={notice.title}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                          />
-                        </div>
+                      {/* Attachment (Image or PDF) */}
+                      {notice.attachment && (
+                        <NoticeAttachment
+                          attachment={notice.attachment}
+                          attachmentType={notice.attachmentType}
+                          attachmentName={notice.attachmentName}
+                          title={notice.title}
+                          variant="list"
+                        />
                       )}
                       
                       {/* Content */}

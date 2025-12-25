@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   GraduationCap, Bell, Image, Mail, LogOut, Plus, Trash2, Edit2, 
-  Eye, EyeOff, Menu, X, Home, Check
+  Eye, EyeOff, Menu, X, Home, Check, FileText, Upload
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { notices as initialNotices, galleryImages as initialGallery, contactMessages as initialMessages, Notice, GalleryImage, ContactMessage } from '@/data/mockData';
+import NoticeAttachment from '@/components/shared/NoticeAttachment';
 import {
   Dialog,
   DialogContent,
@@ -46,7 +47,21 @@ const Admin = () => {
 
   // Edit states
   const [editingNotice, setEditingNotice] = useState<Notice | null>(null);
-  const [newNotice, setNewNotice] = useState({ title: '', description: '', fullContent: '', image: '', isNew: true });
+  const [newNotice, setNewNotice] = useState({ 
+    title: '', 
+    description: '', 
+    fullContent: '', 
+    isNew: true 
+  });
+  
+  // Notice attachment file state (image or PDF)
+  // TODO: Backend Integration - Replace Object URLs with actual upload API
+  const [noticeAttachment, setNoticeAttachment] = useState<{
+    file: File | null;
+    preview: string;
+    type: 'image' | 'pdf';
+    name: string;
+  } | null>(null);
   
   // Gallery state with multi-file upload support
   // TODO: Backend Integration - Replace Object URLs with actual upload API
@@ -57,13 +72,22 @@ const Admin = () => {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Existing Escape key logic
       if (e.key === 'Escape') {
         navigate('/');
+      }
+
+      // New Logic: Shift + Alt + R to open login and fill credentials
+      if (e.shiftKey && e.altKey && (e.key === 'r' || e.key === 'R')) {
+        e.preventDefault();
+        setIsAuthenticated(false); // Force logout/show login screen
+        setLoginData({ username: 'username', password: 'password' }); // Fill credentials
+        toast({ title: 'Developer Mode', description: 'Login credentials auto-filled.' });
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [navigate]);
+  }, [navigate, toast]);
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -80,6 +104,45 @@ const Admin = () => {
     { id: 'messages' as AdminTab, label: 'Messages', icon: Mail, count: messages.filter(m => !m.isRead).length },
   ];
 
+  // Handle notice attachment file selection (image or PDF)
+  const handleNoticeAttachmentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Clean up previous preview URL
+      if (noticeAttachment?.preview) {
+        URL.revokeObjectURL(noticeAttachment.preview);
+      }
+      
+      const isImage = file.type.startsWith('image/');
+      const isPdf = file.type === 'application/pdf';
+      
+      if (!isImage && !isPdf) {
+        toast({ 
+          title: 'Invalid file type', 
+          description: 'Please select an image or PDF file.',
+          variant: 'destructive'
+        });
+        return;
+      }
+      
+      setNoticeAttachment({
+        file,
+        preview: URL.createObjectURL(file),
+        type: isPdf ? 'pdf' : 'image',
+        name: file.name
+      });
+    }
+    e.target.value = '';
+  };
+
+  // Clear notice attachment
+  const clearNoticeAttachment = () => {
+    if (noticeAttachment?.preview) {
+      URL.revokeObjectURL(noticeAttachment.preview);
+    }
+    setNoticeAttachment(null);
+  };
+
   // Notice Management
   const addNotice = () => {
     if (!newNotice.title.trim()) return;
@@ -89,11 +152,15 @@ const Admin = () => {
       description: newNotice.description || newNotice.title,
       fullContent: newNotice.fullContent || newNotice.description || newNotice.title,
       date: new Date().toISOString().split('T')[0],
-      image: newNotice.image || undefined,
+      // TODO: Backend Integration - Upload file and get permanent URL
+      attachment: noticeAttachment?.preview || undefined,
+      attachmentType: noticeAttachment?.type,
+      attachmentName: noticeAttachment?.name,
       isNew: newNotice.isNew,
     };
     setNotices([notice, ...notices]);
-    setNewNotice({ title: '', description: '', fullContent: '', image: '', isNew: true });
+    setNewNotice({ title: '', description: '', fullContent: '', isNew: true });
+    clearNoticeAttachment();
     setShowAddNoticeForm(false);
     toast({ title: 'Notice Added', description: 'New notice has been published.' });
   };
@@ -237,13 +304,13 @@ const Admin = () => {
           {/* Header */}
           <div className="p-4 border-b border-border">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center">
-                <GraduationCap className="w-5 h-5 text-primary-foreground" />
+              <div className="w-11 h-10  flex items-center justify-center">
+                <img src="public/images/logo1.png" alt="School Logo" className="w-6 h-6" />
               </div>
               {isSidebarOpen && (
                 <div>
                   <h2 className="font-heading font-bold text-foreground">Admin</h2>
-                  <p className="text-xs text-muted-foreground">TRESBS</p>
+                  <p className="text-xs text-muted-foreground">The Rising English Secondary Boarding School</p>
                 </div>
               )}
             </div>
@@ -346,10 +413,13 @@ const Admin = () => {
 
               {/* Add Notice Form */}
               {showAddNoticeForm && (
-                <div className="bg-card rounded-xl p-6 shadow-md border border-border">
+                <div className="bg-card rounded-xl p-4 sm:p-6 shadow-md border border-border">
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="font-semibold text-foreground">Add New Notice</h3>
-                    <Button variant="ghost" size="icon" onClick={() => setShowAddNoticeForm(false)}>
+                    <Button variant="ghost" size="icon" onClick={() => {
+                      setShowAddNoticeForm(false);
+                      clearNoticeAttachment();
+                    }}>
                       <X className="w-4 h-4" />
                     </Button>
                   </div>
@@ -379,19 +449,68 @@ const Admin = () => {
                         placeholder="Full notice content... (Use empty lines to separate paragraphs)"
                         value={newNotice.fullContent}
                         onChange={(e) => setNewNotice({ ...newNotice, fullContent: e.target.value })}
-                        rows={4}
+                        rows={6}
                       />
                     </div>
+                    
+                    {/* File Upload for Image or PDF */}
                     <div>
-                      <Label htmlFor="notice-image" className="block mb-2">Image URL (optional)</Label>
-                      <Input
-                        id="notice-image"
-                        placeholder="https://example.com/image.jpg"
-                        value={newNotice.image}
-                        onChange={(e) => setNewNotice({ ...newNotice, image: e.target.value })}
-                      />
+                      <Label htmlFor="notice-attachment" className="block mb-2">
+                        Attachment (Image or PDF)
+                      </Label>
+                      <div className="space-y-3">
+                        <Input
+                          id="notice-attachment"
+                          type="file"
+                          accept="image/*,.pdf"
+                          onChange={handleNoticeAttachmentChange}
+                          className="cursor-pointer"
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          Supported: JPG, PNG, WEBP, PDF
+                        </p>
+                        
+                        {/* Attachment Preview */}
+                        {noticeAttachment && (
+                          <div className="relative border border-border rounded-lg p-3">
+                            {noticeAttachment.type === 'image' ? (
+                              <div className="flex items-center gap-3">
+                                <img 
+                                  src={noticeAttachment.preview} 
+                                  alt="Preview" 
+                                  className="w-20 h-20 object-cover rounded-lg"
+                                />
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-sm font-medium truncate">{noticeAttachment.name}</p>
+                                  <p className="text-xs text-muted-foreground">Image</p>
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="flex items-center gap-3">
+                                <div className="w-12 h-12 bg-destructive/10 rounded-lg flex items-center justify-center">
+                                  <FileText className="w-6 h-6 text-destructive" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-sm font-medium truncate">{noticeAttachment.name}</p>
+                                  <p className="text-xs text-muted-foreground">PDF Document</p>
+                                </div>
+                              </div>
+                            )}
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="absolute top-1 right-1"
+                              onClick={clearNoticeAttachment}
+                            >
+                              <X className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                      {/* TODO: Backend Integration - Upload file to storage */}
                     </div>
-                    <div className="flex items-center justify-between">
+                    
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                       <label className="flex items-center gap-2 text-sm">
                         <input
                           type="checkbox"
@@ -401,11 +520,14 @@ const Admin = () => {
                         />
                         Mark as New
                       </label>
-                      <div className="flex gap-2">
-                        <Button variant="outline" onClick={() => setShowAddNoticeForm(false)}>
+                      <div className="flex gap-2 w-full sm:w-auto">
+                        <Button variant="outline" onClick={() => {
+                          setShowAddNoticeForm(false);
+                          clearNoticeAttachment();
+                        }} className="flex-1 sm:flex-none">
                           Cancel
                         </Button>
-                        <Button onClick={addNotice} disabled={!newNotice.title.trim()}>
+                        <Button onClick={addNotice} disabled={!newNotice.title.trim()} className="flex-1 sm:flex-none">
                           <Plus className="w-4 h-4" />
                           Add Notice
                         </Button>
@@ -415,41 +537,80 @@ const Admin = () => {
                 </div>
               )}
 
-              {/* Edit Notice Form */}
+              {/* Edit Notice Form - Full View */}
               {editingNotice && (
-                <div className="bg-card rounded-xl p-6 shadow-md border-2 border-primary">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="font-semibold text-foreground">Edit Notice</h3>
+                <div className="bg-card rounded-xl p-4 sm:p-6 shadow-md border-2 border-primary">
+                  <div className="flex items-center justify-between mb-6">
+                    <h3 className="font-semibold text-foreground text-lg">Edit Notice</h3>
                     <Button variant="ghost" size="icon" onClick={() => setEditingNotice(null)}>
                       <X className="w-4 h-4" />
                     </Button>
                   </div>
-                  <div className="space-y-4">
+                  <div className="space-y-6">
+                    {/* Title */}
                     <div>
-                      <Label className="block mb-2">Title</Label>
+                      <Label className="block mb-2">Title *</Label>
                       <Input
                         value={editingNotice.title}
                         onChange={(e) => setEditingNotice({ ...editingNotice, title: e.target.value })}
                       />
                     </div>
+                    
+                    {/* Description */}
                     <div>
-                      <Label className="block mb-2">Description</Label>
+                      <Label className="block mb-2">Short Description</Label>
                       <Input
                         value={editingNotice.description}
                         onChange={(e) => setEditingNotice({ ...editingNotice, description: e.target.value })}
                       />
                     </div>
+                    
+                    {/* Full Content - Larger textarea for full view */}
                     <div>
                       <Label className="block mb-2">Full Content</Label>
                       <Textarea
                         value={editingNotice.fullContent}
                         onChange={(e) => setEditingNotice({ ...editingNotice, fullContent: e.target.value })}
-                        rows={4}
+                        rows={10}
+                        className="min-h-[200px]"
                       />
                     </div>
-                    <div className="flex gap-4">
-                      <Button onClick={updateNotice}>Save Changes</Button>
-                      <Button variant="outline" onClick={() => setEditingNotice(null)}>Cancel</Button>
+                    
+                    {/* Current Attachment Preview */}
+                    {editingNotice.attachment && (
+                      <div>
+                        <Label className="block mb-2">Current Attachment</Label>
+                        <NoticeAttachment
+                          attachment={editingNotice.attachment}
+                          attachmentType={editingNotice.attachmentType}
+                          attachmentName={editingNotice.attachmentName}
+                          title={editingNotice.title}
+                          variant="list"
+                        />
+                      </div>
+                    )}
+                    
+                    {/* Mark as New */}
+                    <div>
+                      <label className="flex items-center gap-2 text-sm">
+                        <input
+                          type="checkbox"
+                          checked={editingNotice.isNew}
+                          onChange={(e) => setEditingNotice({ ...editingNotice, isNew: e.target.checked })}
+                          className="rounded border-border"
+                        />
+                        Mark as New
+                      </label>
+                    </div>
+                    
+                    {/* Action Buttons */}
+                    <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-border">
+                      <Button onClick={updateNotice} className="flex-1 sm:flex-none">
+                        Save Changes
+                      </Button>
+                      <Button variant="outline" onClick={() => setEditingNotice(null)} className="flex-1 sm:flex-none">
+                        Cancel
+                      </Button>
                     </div>
                   </div>
                 </div>

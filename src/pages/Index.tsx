@@ -2,7 +2,9 @@ import { Link } from 'react-router-dom';
 import { ArrowRight, Users, BookOpen, Award, GraduationCap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { schoolInfo, facilities } from '@/data/mockData';
-import heroImage from '@/assets/hero-school.jpg';
+
+// Use hero image from public folder for Home page only
+const heroImagePath = '/images/hero.jpg';
 
 const Index = () => {
   const stats = [
@@ -14,15 +16,14 @@ const Index = () => {
 
   return (
     <div>
-      {/* Hero Section */}
+      {/* Hero Section - Uses public/images/hero.jpg */}
       <section className="relative min-h-[80vh] flex items-center">
         <div 
           className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: `url(${heroImage})` }}
+          style={{ backgroundImage: `url(${heroImagePath})` }}
         >
-          {/* Dark overlay for text readability */}
-          <div className="absolute inset-0 bg-foreground/50" />
-          <div className="absolute inset-0 gradient-hero" />
+          {/* Light gradient overlay for text contrast - allows hero image to be clearly visible */}
+          <div className="absolute inset-0 bg-gradient-to-r from-foreground/60 via-foreground/40 to-transparent" />
         </div>
         
         <div className="container-school relative z-10 py-20">

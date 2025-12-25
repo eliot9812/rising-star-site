@@ -1,6 +1,7 @@
 import { useParams, Link } from 'react-router-dom';
 import { notices } from '@/data/mockData';
 import PageHero from '@/components/shared/PageHero';
+import NoticeAttachment from '@/components/shared/NoticeAttachment';
 import { Calendar, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Helmet } from 'react-helmet-async';
@@ -35,7 +36,9 @@ const NoticeDetail = () => {
         <meta name="description" content={notice.description} />
         <meta property="og:title" content={notice.title} />
         <meta property="og:description" content={notice.description} />
-        {notice.image && <meta property="og:image" content={notice.image} />}
+        {notice.attachment && notice.attachmentType === 'image' && (
+          <meta property="og:image" content={notice.attachment} />
+        )}
       </Helmet>
 
       <div>
@@ -79,15 +82,15 @@ const NoticeDetail = () => {
                   </span>
                 </div>
 
-                {/* Image */}
-                {notice.image && (
-                  <div className="mb-8 rounded-xl overflow-hidden">
-                    <img 
-                      src={notice.image} 
-                      alt={notice.title}
-                      className="w-full h-auto max-h-96 object-cover"
-                    />
-                  </div>
+                {/* Attachment (Image or PDF) */}
+                {notice.attachment && (
+                  <NoticeAttachment
+                    attachment={notice.attachment}
+                    attachmentType={notice.attachmentType}
+                    attachmentName={notice.attachmentName}
+                    title={notice.title}
+                    variant="detail"
+                  />
                 )}
 
                 {/* Title */}

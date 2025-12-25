@@ -43,29 +43,24 @@ const Navbar = () => {
     >
       <div className="container-school">
         <div className="flex items-center justify-between h-16 md:h-20">
-          {/* Logo */}
-          <Link to="/" className="flex items-center gap-3 group">
+          {/* Logo + School Name - visible on all screen sizes */}
+          <Link to="/" className="flex items-center gap-2 sm:gap-3 group min-w-0 flex-1 lg:flex-none">
             <div className={cn(
-              
-              'w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center transition-all duration-300',
+              'w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center transition-all duration-300 flex-shrink-0',
               isScrolled ? 'bg-secondary' : 'bg-secondary-foreground/20'
             )}>
-              <img src="/images/logo1.png" alt="Logo" />
-              
-              {/* <GraduationCap className={cn(
-                'w-6 h-6 md:w-7 md:h-7 transition-colors',
-                isScrolled ? 'text-primary-foreground' : 'text-primary-foreground'
-              )} /> */}
+              <img src="/images/logo1.png" alt="Logo" className="w-full h-full object-contain" />
             </div>
-            <div className="hidden sm:block">
+            {/* School name - now visible on mobile too */}
+            <div className="min-w-0">
               <h1 className={cn(
-                'font-heading font-bold text-lg md:text-xl leading-tight transition-colors',
+                'font-heading font-bold text-sm sm:text-lg md:text-xl leading-tight transition-colors truncate',
                 isScrolled ? 'text-foreground' : 'text-primary-foreground'
               )}>
                 The Rising
               </h1>
               <p className={cn(
-                'text-xs transition-colors',
+                'text-[10px] sm:text-xs transition-colors truncate',
                 isScrolled ? 'text-muted-foreground' : 'text-primary-foreground/80'
               )}>
                 English Secondary Boarding School
