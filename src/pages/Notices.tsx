@@ -39,7 +39,7 @@ const Notices = () => {
         <meta name="description" content="Stay updated with the latest notices, announcements, and news from The Rising English Secondary Boarding School." />
       </Helmet>
 
-      <div>
+      <div className="min-h-screen">
         <PageHero 
           title="Notices & Announcements" 
           subtitle="Stay updated with the latest news and announcements from our school"

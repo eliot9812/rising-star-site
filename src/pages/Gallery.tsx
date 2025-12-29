@@ -7,7 +7,7 @@ const Gallery = () => {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   return (
-    <div>
+    <div className="min-h-screen">
       <PageHero 
         title="Photo Gallery" 
         subtitle="Explore moments captured from our vibrant school life"

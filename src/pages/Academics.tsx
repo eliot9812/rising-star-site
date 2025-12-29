@@ -5,7 +5,7 @@ import PageHero from '@/components/shared/PageHero';
 const Academics = () => {
   const academicFeatures = [
     { icon: BookOpen, title: 'Comprehensive Curriculum', description: 'Following the national curriculum with enhanced teaching methodologies' },
-    { icon: Users, title: 'Small Class Sizes', description: 'Maximum 30 students per class for personalized attention' },
+    { icon: Users, title: 'Expert Teachers', description: 'Highly qualified and experienced teachers for quality education' },
     { icon: Clock, title: 'Extended Hours', description: 'Additional study hours and remedial classes for weak students' },
     { icon: Award, title: 'Regular Assessments', description: 'Continuous evaluation through tests, projects, and examinations' },
   ];
@@ -75,7 +75,7 @@ const Academics = () => {
             <div className="bg-card rounded-xl p-6 shadow-md hover:shadow-xl transition-all duration-300 border-t-4 border-school-gold">
               <h3 className="font-heading text-xl font-bold text-foreground mb-4">Secondary Level</h3>
               <ul className="space-y-2">
-                {classes.slice(8).map((cls) => (
+                {classes.slice(8, 12).map((cls) => (
                   <li key={cls} className="flex items-center gap-3 text-muted-foreground">
                     <span className="w-2 h-2 rounded-full bg-school-gold" />
                     {cls}
@@ -84,6 +84,22 @@ const Academics = () => {
               </ul>
               <p className="mt-4 text-sm text-muted-foreground">
                 Preparation for board examinations with career guidance and counseling.
+              </p>
+            </div>
+
+            {/* +2 Level */}
+            <div className="bg-card rounded-xl p-6 shadow-md hover:shadow-xl transition-all duration-300 border-t-4 border-primary md:col-span-3">
+              <h3 className="font-heading text-xl font-bold text-foreground mb-4">+2 Level (Higher Secondary)</h3>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {classes.slice(12).map((cls) => (
+                  <div key={cls} className="flex items-center gap-3 text-muted-foreground">
+                    <span className="w-2 h-2 rounded-full bg-primary" />
+                    {cls}
+                  </div>
+                ))}
+              </div>
+              <p className="mt-4 text-sm text-muted-foreground">
+                Specialized streams including Management, Hotel Management, Computer Science, and Business Studies.
               </p>
             </div>
           </div>

@@ -108,7 +108,7 @@ const Navbar = () => {
         <div
           className={cn(
             'lg:hidden overflow-hidden transition-all duration-300',
-            isOpen ? 'max-h-96 pb-4' : 'max-h-0'
+            isOpen ? 'max-h-[500px] pb-6' : 'max-h-0'
           )}
         >
           <div className="flex flex-col gap-2 pt-2">

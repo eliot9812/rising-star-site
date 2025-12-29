@@ -24,10 +24,7 @@ const Footer = () => {
               {schoolInfo.tagline}. Established in {schoolInfo.established}, we have been nurturing young minds for excellence.
             </p>
             <div className="flex gap-3">
-              <a href="https://www.facebook.com/profile.php?id=100063526275005" 
-                target="_blank"
-                rel="noopener noreferrer"
-              className="w-10 h-10 rounded-full bg-background/10 flex items-center justify-center hover:bg-primary transition-colors">
+              <a href="#" className="w-10 h-10 rounded-full bg-background/10 flex items-center justify-center hover:bg-primary transition-colors">
                 <Facebook className="w-5 h-5" />
               </a>
               <a href="#" className="w-10 h-10 rounded-full bg-background/10 flex items-center justify-center hover:bg-primary transition-colors">
@@ -67,6 +64,8 @@ const Footer = () => {
               <li>Primary Level (1-5)</li>
               <li>Lower Secondary (6-8)</li>
               <li>Secondary Level (9-10)</li>
+              <li>Higher Secondary (11-12) </li>
+              <ul>Management,Hotel Management, Computer Science, Business Studies</ul>
               <li>Science Lab</li>
               <li>Computer Lab</li>
             </ul>

@@ -16,15 +16,16 @@ const Layout = ({ children }: LayoutProps) => {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Ctrl + Alt + R to open admin panel
-      if (e.shiftKey && e.altKey && e.key.toLowerCase() === 'r') {
+      // Ctrl + Alt + P to open admin panel
+      if (e.ctrlKey && e.altKey && (e.key === 'p' || e.key === 'P' || e.code === 'KeyP')) {
         e.preventDefault();
+        e.stopPropagation();
         navigate('/admin');
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener('keydown', handleKeyDown, true);
+    return () => window.removeEventListener('keydown', handleKeyDown, true);
   }, [navigate]);
 
   if (isAdminPage) {

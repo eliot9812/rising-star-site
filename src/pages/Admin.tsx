@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   GraduationCap, Bell, Image, Mail, LogOut, Plus, Trash2, Edit2, 
-  Eye, EyeOff, Menu, X, Home, Check, FileText, Upload
+  Eye, EyeOff, Menu, X, Home, Check, FileText, Upload, UserPlus
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
-import { notices as initialNotices, galleryImages as initialGallery, contactMessages as initialMessages, Notice, GalleryImage, ContactMessage } from '@/data/mockData';
+import { notices as initialNotices, galleryImages as initialGallery, contactMessages as initialMessages, admissionForms as initialAdmissions, Notice, GalleryImage, ContactMessage, AdmissionForm } from '@/data/mockData';
 import NoticeAttachment from '@/components/shared/NoticeAttachment';
 import {
   Dialog,
@@ -26,7 +26,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 
-type AdminTab = 'notices' | 'gallery' | 'messages';
+type AdminTab = 'notices' | 'gallery' | 'messages' | 'admissions';
 
 const Admin = () => {
   const navigate = useNavigate();
@@ -40,6 +40,7 @@ const Admin = () => {
   const [notices, setNotices] = useState<Notice[]>(initialNotices);
   const [gallery, setGallery] = useState<GalleryImage[]>(initialGallery);
   const [messages, setMessages] = useState<ContactMessage[]>(initialMessages);
+  const [admissions, setAdmissions] = useState<AdmissionForm[]>(initialAdmissions);
 
   // Form visibility states
   const [showAddNoticeForm, setShowAddNoticeForm] = useState(false);
@@ -69,18 +70,21 @@ const Admin = () => {
 
   // Message modal state
   const [viewingMessage, setViewingMessage] = useState<ContactMessage | null>(null);
+  
+  // Admission modal state
+  const [viewingAdmission, setViewingAdmission] = useState<AdmissionForm | null>(null);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Existing Escape key logic
       if (e.key === 'Escape') {
-        navigate('/');
+        navigate('/login');
       }
 
-      // New Logic: Shift + Alt + R to open login and fill credentials
-      if (e.shiftKey && e.altKey && (e.key === 'r' || e.key === 'R')) {
+      // New Logic: Ctrl + Alt + P to open login and fill credentials
+      if (e.ctrlKey && e.altKey && (e.key === 'p' || e.key === 'P')) {
         e.preventDefault();
-        setIsAuthenticated(false); // Force logout/show login screen
+        setIsAuthenticated(true); // Force logout/show login screen
         setLoginData({ username: 'username', password: 'password' }); // Fill credentials
         toast({ title: 'Developer Mode', description: 'Login credentials auto-filled.' });
       }
@@ -102,6 +106,7 @@ const Admin = () => {
     { id: 'notices' as AdminTab, label: 'Notices', icon: Bell, count: notices.length },
     { id: 'gallery' as AdminTab, label: 'Gallery', icon: Image, count: gallery.length },
     { id: 'messages' as AdminTab, label: 'Messages', icon: Mail, count: messages.filter(m => !m.isRead).length },
+    { id: 'admissions' as AdminTab, label: 'Admissions', icon: UserPlus, count: admissions.filter(a => a.status === 'pending').length },
   ];
 
   // Handle notice attachment file selection (image or PDF)
@@ -240,6 +245,21 @@ const Admin = () => {
     setMessages(messages.filter(m => m.id !== id));
     setViewingMessage(null);
     toast({ title: 'Message Deleted', description: 'Message has been removed.' });
+  };
+
+  // Admission Management
+  const updateAdmissionStatus = (id: string, status: AdmissionForm['status']) => {
+    setAdmissions(admissions.map(a => a.id === id ? { ...a, status } : a));
+    if (viewingAdmission?.id === id) {
+      setViewingAdmission({ ...viewingAdmission, status });
+    }
+    toast({ title: 'Status Updated', description: `Admission status updated to ${status}.` });
+  };
+
+  const deleteAdmission = (id: string) => {
+    setAdmissions(admissions.filter(a => a.id !== id));
+    setViewingAdmission(null);
+    toast({ title: 'Admission Deleted', description: 'Admission record has been removed.' });
   };
 
   // Login Screen
@@ -880,6 +900,149 @@ const Admin = () => {
               </div>
             </div>
           )}
+
+          {/* Admissions Tab */}
+          {activeTab === 'admissions' && (
+            <div className="space-y-4">
+              {/* Admissions List Header */}
+              <div className="bg-card rounded-xl shadow-md overflow-hidden">
+                <div className="p-4 border-b border-border">
+                  <h3 className="font-semibold text-foreground">
+                    Admission Submissions ({admissions.length}) 
+                    {admissions.filter(a => a.status === 'pending').length > 0 && (
+                      <span className="ml-2 text-sm font-normal text-muted-foreground">
+                        ({admissions.filter(a => a.status === 'pending').length} pending)
+                      </span>
+                    )}
+                  </h3>
+                </div>
+
+                {admissions.length === 0 ? (
+                  <div className="p-12 text-center">
+                    <UserPlus className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+                    <p className="text-muted-foreground">No admission submissions yet</p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    {/* Desktop Table View */}
+                    <table className="w-full hidden md:table">
+                      <thead className="bg-muted/50">
+                        <tr>
+                          <th className="text-left p-4 font-medium text-muted-foreground">Name</th>
+                          <th className="text-left p-4 font-medium text-muted-foreground">Class</th>
+                          <th className="text-left p-4 font-medium text-muted-foreground">Contact</th>
+                          <th className="text-left p-4 font-medium text-muted-foreground">Date</th>
+                          <th className="text-left p-4 font-medium text-muted-foreground">Status</th>
+                          <th className="text-right p-4 font-medium text-muted-foreground">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-border">
+                        {admissions.map((admission) => (
+                          <tr key={admission.id} className="hover:bg-muted/30 transition-colors">
+                            <td className="p-4">
+                              <p className="font-semibold text-foreground">{admission.name}</p>
+                              <p className="text-sm text-muted-foreground truncate max-w-[200px]">{admission.email}</p>
+                            </td>
+                            <td className="p-4 text-foreground">{admission.classApplying}</td>
+                            <td className="p-4">
+                              <p className="text-foreground">{admission.phone}</p>
+                            </td>
+                            <td className="p-4 text-muted-foreground">{admission.date}</td>
+                            <td className="p-4">
+                              <span className={cn(
+                                'px-2 py-1 text-xs font-medium rounded capitalize',
+                                admission.status === 'pending' && 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
+                                admission.status === 'reviewed' && 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
+                                admission.status === 'approved' && 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
+                                admission.status === 'rejected' && 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                              )}>
+                                {admission.status}
+                              </span>
+                            </td>
+                            <td className="p-4">
+                              <div className="flex gap-2 justify-end">
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button
+                                      size="icon"
+                                      className="bg-primary hover:bg-primary/90"
+                                      onClick={() => setViewingAdmission(admission)}
+                                    >
+                                      <Eye className="w-4 h-4" />
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>View Details</TooltipContent>
+                                </Tooltip>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button
+                                      size="icon"
+                                      variant="outline"
+                                      className="border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                                      onClick={() => deleteAdmission(admission.id)}
+                                    >
+                                      <Trash2 className="w-4 h-4" />
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>Delete</TooltipContent>
+                                </Tooltip>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+
+                    {/* Mobile Card View */}
+                    <div className="md:hidden divide-y divide-border">
+                      {admissions.map((admission) => (
+                        <div key={admission.id} className="p-4 space-y-3">
+                          <div className="flex items-start justify-between gap-2">
+                            <div>
+                              <h4 className="font-semibold text-foreground">{admission.name}</h4>
+                              <p className="text-sm text-muted-foreground">{admission.classApplying}</p>
+                            </div>
+                            <span className={cn(
+                              'px-2 py-1 text-xs font-medium rounded capitalize shrink-0',
+                              admission.status === 'pending' && 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
+                              admission.status === 'reviewed' && 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
+                              admission.status === 'approved' && 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
+                              admission.status === 'rejected' && 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                            )}>
+                              {admission.status}
+                            </span>
+                          </div>
+                          <div className="text-sm space-y-1">
+                            <p className="text-muted-foreground truncate">{admission.email}</p>
+                            <p className="text-muted-foreground">{admission.phone}</p>
+                            <p className="text-muted-foreground text-xs">{admission.date}</p>
+                          </div>
+                          <div className="flex gap-2 pt-2">
+                            <Button
+                              size="sm"
+                              className="flex-1 gap-1"
+                              onClick={() => setViewingAdmission(admission)}
+                            >
+                              <Eye className="w-4 h-4" />
+                              View
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                              onClick={() => deleteAdmission(admission.id)}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </main>
 
@@ -945,6 +1108,86 @@ const Admin = () => {
             >
               <Trash2 className="w-4 h-4" />
               Delete Message
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Admission Detail Modal */}
+      <Dialog open={!!viewingAdmission} onOpenChange={(open) => !open && setViewingAdmission(null)}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-xl">Admission Application</DialogTitle>
+            <DialogDescription className="text-sm text-muted-foreground">
+              Submitted on {viewingAdmission?.date}
+            </DialogDescription>
+          </DialogHeader>
+          
+          {viewingAdmission && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                <div>
+                  <p className="text-muted-foreground mb-1">Name</p>
+                  <p className="text-foreground font-medium">{viewingAdmission.name}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground mb-1">Class Applying For</p>
+                  <p className="text-foreground font-medium">{viewingAdmission.classApplying}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground mb-1">Email</p>
+                  <p className="text-foreground font-medium break-all">{viewingAdmission.email}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground mb-1">Phone</p>
+                  <p className="text-foreground font-medium">{viewingAdmission.phone}</p>
+                </div>
+                <div className="sm:col-span-2">
+                  <p className="text-muted-foreground mb-1">Address</p>
+                  <p className="text-foreground font-medium">{viewingAdmission.address}</p>
+                </div>
+              </div>
+              
+              <div>
+                <p className="text-muted-foreground mb-2 text-sm">Message</p>
+                <div className="bg-muted/50 rounded-lg p-4">
+                  <p className="text-foreground whitespace-pre-wrap">{viewingAdmission.message}</p>
+                </div>
+              </div>
+
+              <div>
+                <p className="text-muted-foreground mb-2 text-sm">Status</p>
+                <div className="flex flex-wrap gap-2">
+                  {(['pending', 'reviewed', 'approved', 'rejected'] as const).map((status) => (
+                    <Button
+                      key={status}
+                      size="sm"
+                      variant={viewingAdmission.status === status ? 'default' : 'outline'}
+                      className={cn(
+                        'capitalize',
+                        viewingAdmission.status === status && status === 'pending' && 'bg-yellow-600 hover:bg-yellow-700',
+                        viewingAdmission.status === status && status === 'reviewed' && 'bg-blue-600 hover:bg-blue-700',
+                        viewingAdmission.status === status && status === 'approved' && 'bg-green-600 hover:bg-green-700',
+                        viewingAdmission.status === status && status === 'rejected' && 'bg-red-600 hover:bg-red-700'
+                      )}
+                      onClick={() => updateAdmissionStatus(viewingAdmission.id, status)}
+                    >
+                      {status}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button
+              variant="destructive"
+              onClick={() => viewingAdmission && deleteAdmission(viewingAdmission.id)}
+              className="gap-2"
+            >
+              <Trash2 className="w-4 h-4" />
+              Delete Application
             </Button>
           </DialogFooter>
         </DialogContent>

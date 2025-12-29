@@ -1,46 +1,75 @@
-// Mock data for the school website - Backend ready structure
+/**
+ * Mock data for the school website - Backend Ready Structure
+ * 
+ * BACKEND INTEGRATION NOTES:
+ * ==========================
+ * All data models below are designed to be compatible with a database schema.
+ * Each model has a unique `id` field for database primary keys.
+ * 
+ * API Integration Points:
+ * - GET /api/notices - Fetch all notices
+ * - GET /api/notices/:id - Fetch single notice
+ * - POST /api/notices - Create notice (admin)
+ * - PUT /api/notices/:id - Update notice (admin)
+ * - DELETE /api/notices/:id - Delete notice (admin)
+ * 
+ * - GET /api/gallery - Fetch all gallery images
+ * - POST /api/gallery - Upload image (admin)
+ * - DELETE /api/gallery/:id - Delete image (admin)
+ * 
+ * - POST /api/contact - Submit contact form
+ * - GET /api/contact - Fetch messages (admin)
+ * - PUT /api/contact/:id - Mark as read (admin)
+ * 
+ * - POST /api/admission - Submit admission form
+ * - GET /api/admission - Fetch submissions (admin)
+ * - PUT /api/admission/:id - Update status (admin)
+ */
 
 export interface Notice {
-  id: string;
+  id: string; // Primary key - UUID recommended for production
   title: string;
   description: string;
   fullContent: string;
-  date: string;
-  // Attachment can be image URL, PDF URL, or object URL (for frontend-only uploads)
-  // TODO: Backend Integration - Replace with permanent storage URLs
+  date: string; // ISO 8601 format - can be converted to Date type
+  // TODO: Backend Integration - Replace with permanent storage URLs from file storage service
   attachment?: string;
   attachmentType?: 'image' | 'pdf';
   attachmentName?: string; // Original filename for display
   isNew: boolean;
+  // TODO: Add createdAt, updatedAt timestamps
 }
 
 export interface GalleryImage {
-  id: string;
-  src: string;
+  id: string; // Primary key - UUID recommended for production
+  src: string; // TODO: Backend Integration - Use file storage service URL
   alt: string;
-  date: string;
+  date: string; // ISO 8601 format
+  // TODO: Add category, tags for filtering
 }
 
 export interface ContactMessage {
-  id: string;
+  id: string; // Primary key - UUID recommended for production
   name: string;
   email: string;
   phone: string;
   message: string;
-  date: string;
+  date: string; // ISO 8601 format - createdAt timestamp
   isRead: boolean;
+  // TODO: Add respondedAt, respondedBy for tracking
 }
 
 export interface AdmissionForm {
-  id: string;
+  id: string; // Primary key - UUID recommended for production
   name: string;
   phone: string;
   email: string;
   address: string;
   classApplying: string;
   message: string;
-  date: string;
+  date: string; // ISO 8601 format - submittedAt timestamp
   status: 'pending' | 'reviewed' | 'approved' | 'rejected';
+  // TODO: Add reviewedBy, reviewedAt, notes for admin tracking
 }
 
 export const notices: Notice[] = [
@@ -111,6 +140,12 @@ export const contactMessages: ContactMessage[] = [
   { id: '3', name: 'Hari Prasad', email: 'hari@example.com', phone: '+977-9861234567', message: 'Please share the fee structure for boarding students.', date: '2024-12-18', isRead: false },
 ];
 
+export const admissionForms: AdmissionForm[] = [
+  { id: '1', name: 'Arun Kumar', phone: '+977-9801234567', email: 'arun@example.com', address: 'Biratnagar-10, Morang', classApplying: 'Class 5', message: 'Looking for admission for my son in the upcoming academic year.', date: '2024-12-20', status: 'pending' },
+  { id: '2', name: 'Sunita Rai', phone: '+977-9812345678', email: 'sunita@example.com', address: 'Dharan-5, Sunsari', classApplying: 'Class 8', message: 'We are relocating from Kathmandu and would like to know about hostel facilities.', date: '2024-12-19', status: 'reviewed' },
+  { id: '3', name: 'Bikash Limbu', phone: '+977-9823456789', email: 'bikash@example.com', address: 'Itahari-8, Sunsari', classApplying: 'Nursery', message: 'I want to enroll my daughter in nursery for the 2025 session.', date: '2024-12-18', status: 'approved' },
+];
+
 export const schoolInfo = {
   name: 'The Rising English Secondary Boarding School',
   shortName: 'TRESBS',
@@ -128,7 +163,7 @@ export const schoolInfo = {
 export const principal = {
   name: 'Gopal Prasad Pathak',
   position: 'Principal',
-  image: '',
+  image: 'public/images/principal.png',
   message: `Welcome to The Rising English Secondary Boarding School. For over two decades, we have been committed to providing quality education that nurtures young minds and prepares them for the challenges of tomorrow.
 
 Our school believes in holistic development, combining academic excellence with character building, sports, and extracurricular activities. We strive to create an environment where every student can discover their potential and grow into responsible citizens.
@@ -137,7 +172,7 @@ I am proud of our dedicated faculty, state-of-the-art facilities, and the achiev
 };
 
 export const vicePrincipal = {
-  name: 'Parshuram Guragai',
+  name: 'Parshuram Guragain',
   position: 'Vice Principal',
   image: 'public/images/viceprincipal.jpg',
   message: `As the Vice Principal, I am honored to be part of an institution that prioritizes both academic excellence and personal growth. Our approach to education goes beyond textbooks – we focus on developing critical thinking, creativity, and compassion in our students.
@@ -148,8 +183,14 @@ I invite parents to partner with us in this beautiful journey of education. Toge
 };
 
 export const classes = [
-  'Nursery', 'LKG', 'UKG', 'Class 1', 'Class 2', 'Class 3', 'Class 4', 
-  'Class 5', 'Class 6', 'Class 7', 'Class 8', 'Class 9', 'Class 10'
+  // Pre-Primary to Class 9
+  'Nursery', 'LKG', 'UKG', 
+  'Class 1', 'Class 2', 'Class 3', 'Class 4', 'Class 5', 
+  'Class 6', 'Class 7', 'Class 8', 'Class 9',
+  // +2 Level
+  'Management', ' Hotel Management', 
+  ' Computer Science', ' Business Studies',
+  
 ];
 
 export const subjects = {
