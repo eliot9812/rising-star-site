@@ -26,16 +26,30 @@
  * - PUT /api/admission/:id - Update status (admin)
  */
 
+/**
+ * Attachment interface for notice files (images and PDFs)
+ * TODO: Backend Integration - Replace Object URLs with permanent storage URLs
+ */
+export interface NoticeAttachmentData {
+  id: string; // Unique ID for each attachment
+  url: string; // File URL (Object URL for frontend, storage URL for backend)
+  type: 'image' | 'pdf';
+  name: string; // Original filename for display
+}
+
 export interface Notice {
   id: string; // Primary key - UUID recommended for production
   title: string;
   description: string;
   fullContent: string;
   date: string; // ISO 8601 format - can be converted to Date type
-  // TODO: Backend Integration - Replace with permanent storage URLs from file storage service
+  // Multiple attachments support (images and PDFs)
+  // TODO: Backend Integration - Upload files to storage and store permanent URLs
+  attachments?: NoticeAttachmentData[];
+  // Legacy single attachment fields (kept for backward compatibility)
   attachment?: string;
   attachmentType?: 'image' | 'pdf';
-  attachmentName?: string; // Original filename for display
+  attachmentName?: string;
   isNew: boolean;
   // TODO: Add createdAt, updatedAt timestamps
 }

@@ -1,7 +1,8 @@
 import { useParams, Link } from 'react-router-dom';
-import { notices } from '@/data/mockData';
+import { notices, NoticeAttachmentData } from '@/data/mockData';
 import PageHero from '@/components/shared/PageHero';
 import NoticeAttachment from '@/components/shared/NoticeAttachment';
+import AttachmentsGallery from '@/components/shared/AttachmentsGallery';
 import { Calendar, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Helmet } from 'react-helmet-async';
@@ -82,8 +83,14 @@ const NoticeDetail = () => {
                   </span>
                 </div>
 
-                {/* Attachment (Image or PDF) */}
-                {notice.attachment && (
+                {/* Multiple Attachments Gallery (Images & PDFs) */}
+                {notice.attachments && notice.attachments.length > 0 ? (
+                  <AttachmentsGallery
+                    attachments={notice.attachments}
+                    title={notice.title}
+                  />
+                ) : notice.attachment ? (
+                  /* Legacy single attachment support */
                   <NoticeAttachment
                     attachment={notice.attachment}
                     attachmentType={notice.attachmentType}
@@ -91,7 +98,7 @@ const NoticeDetail = () => {
                     title={notice.title}
                     variant="detail"
                   />
-                )}
+                ) : null}
 
                 {/* Title */}
                 <h1 className="font-heading text-2xl md:text-3xl font-bold text-foreground mb-6">

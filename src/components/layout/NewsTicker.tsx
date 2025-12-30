@@ -8,8 +8,8 @@ const NewsTicker = () => {
   const tickerContent = [...notices, ...notices];
 
   const handleNoticeClick = (noticeId: string) => {
-    // Navigate to notices page with highlight parameter
-    navigate(`/notices?highlight=${noticeId}`);
+    // Navigate directly to notice detail page (same tab)
+    navigate(`/notices/${noticeId}`);
   };
 
   return (

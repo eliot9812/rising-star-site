@@ -10,8 +10,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
-import { notices as initialNotices, galleryImages as initialGallery, contactMessages as initialMessages, admissionForms as initialAdmissions, Notice, GalleryImage, ContactMessage, AdmissionForm } from '@/data/mockData';
+import { notices as initialNotices, galleryImages as initialGallery, contactMessages as initialMessages, admissionForms as initialAdmissions, Notice, GalleryImage, ContactMessage, AdmissionForm, NoticeAttachmentData } from '@/data/mockData';
 import NoticeAttachment from '@/components/shared/NoticeAttachment';
+import MultiFileUploader, { FileWithPreview } from '@/components/admin/MultiFileUploader';
 import {
   Dialog,
   DialogContent,
@@ -55,14 +56,13 @@ const Admin = () => {
     isNew: true 
   });
   
-  // Notice attachment file state (image or PDF)
+  // Multiple notice attachments (images and PDFs)
   // TODO: Backend Integration - Replace Object URLs with actual upload API
-  const [noticeAttachment, setNoticeAttachment] = useState<{
-    file: File | null;
-    preview: string;
-    type: 'image' | 'pdf';
-    name: string;
-  } | null>(null);
+  const [noticeAttachments, setNoticeAttachments] = useState<FileWithPreview[]>([]);
+  
+  // For editing - track existing attachments to remove
+  const [editingNoticeAttachments, setEditingNoticeAttachments] = useState<NoticeAttachmentData[]>([]);
+  const [newEditAttachments, setNewEditAttachments] = useState<FileWithPreview[]>([]);
   
   // Gallery state with multi-file upload support
   // TODO: Backend Integration - Replace Object URLs with actual upload API
@@ -109,71 +109,83 @@ const Admin = () => {
     { id: 'admissions' as AdminTab, label: 'Admissions', icon: UserPlus, count: admissions.filter(a => a.status === 'pending').length },
   ];
 
-  // Handle notice attachment file selection (image or PDF)
-  const handleNoticeAttachmentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      // Clean up previous preview URL
-      if (noticeAttachment?.preview) {
-        URL.revokeObjectURL(noticeAttachment.preview);
-      }
-      
-      const isImage = file.type.startsWith('image/');
-      const isPdf = file.type === 'application/pdf';
-      
-      if (!isImage && !isPdf) {
-        toast({ 
-          title: 'Invalid file type', 
-          description: 'Please select an image or PDF file.',
-          variant: 'destructive'
-        });
-        return;
-      }
-      
-      setNoticeAttachment({
-        file,
-        preview: URL.createObjectURL(file),
-        type: isPdf ? 'pdf' : 'image',
-        name: file.name
-      });
-    }
-    e.target.value = '';
+  // Clear all notice attachments
+  const clearNoticeAttachments = () => {
+    noticeAttachments.forEach(f => URL.revokeObjectURL(f.preview));
+    setNoticeAttachments([]);
   };
 
-  // Clear notice attachment
-  const clearNoticeAttachment = () => {
-    if (noticeAttachment?.preview) {
-      URL.revokeObjectURL(noticeAttachment.preview);
-    }
-    setNoticeAttachment(null);
+  // Clear edit mode attachments
+  const clearEditAttachments = () => {
+    newEditAttachments.forEach(f => URL.revokeObjectURL(f.preview));
+    setNewEditAttachments([]);
+    setEditingNoticeAttachments([]);
+  };
+
+  // Remove existing attachment from edit mode
+  const removeExistingAttachment = (id: string) => {
+    setEditingNoticeAttachments(prev => prev.filter(a => a.id !== id));
   };
 
   // Notice Management
   const addNotice = () => {
     if (!newNotice.title.trim()) return;
+    
+    // Convert FileWithPreview to NoticeAttachmentData
+    // TODO: Backend Integration - Upload files to storage and get permanent URLs
+    const attachments: NoticeAttachmentData[] = noticeAttachments.map(f => ({
+      id: f.id,
+      url: f.preview, // In production, replace with uploaded file URL
+      type: f.type,
+      name: f.name
+    }));
+    
     const notice: Notice = {
       id: Date.now().toString(),
       title: newNotice.title,
       description: newNotice.description || newNotice.title,
       fullContent: newNotice.fullContent || newNotice.description || newNotice.title,
       date: new Date().toISOString().split('T')[0],
-      // TODO: Backend Integration - Upload file and get permanent URL
-      attachment: noticeAttachment?.preview || undefined,
-      attachmentType: noticeAttachment?.type,
-      attachmentName: noticeAttachment?.name,
+      // Multiple attachments support
+      attachments: attachments.length > 0 ? attachments : undefined,
       isNew: newNotice.isNew,
     };
     setNotices([notice, ...notices]);
     setNewNotice({ title: '', description: '', fullContent: '', isNew: true });
-    clearNoticeAttachment();
+    setNoticeAttachments([]); // Don't revoke URLs since they're now used in the notice
     setShowAddNoticeForm(false);
     toast({ title: 'Notice Added', description: 'New notice has been published.' });
   };
 
+  // Start editing a notice
+  const startEditingNotice = (notice: Notice) => {
+    setEditingNotice(notice);
+    setEditingNoticeAttachments(notice.attachments || []);
+    setNewEditAttachments([]);
+  };
+
   const updateNotice = () => {
     if (!editingNotice) return;
-    setNotices(notices.map(n => n.id === editingNotice.id ? editingNotice : n));
+    
+    // Combine existing attachments with new ones
+    // TODO: Backend Integration - Upload new files and get permanent URLs
+    const newAttachments: NoticeAttachmentData[] = newEditAttachments.map(f => ({
+      id: f.id,
+      url: f.preview,
+      type: f.type,
+      name: f.name
+    }));
+    
+    const updatedNotice: Notice = {
+      ...editingNotice,
+      attachments: [...editingNoticeAttachments, ...newAttachments].length > 0 
+        ? [...editingNoticeAttachments, ...newAttachments] 
+        : undefined
+    };
+    
+    setNotices(notices.map(n => n.id === editingNotice.id ? updatedNotice : n));
     setEditingNotice(null);
+    clearEditAttachments();
     toast({ title: 'Notice Updated', description: 'Notice has been updated successfully.' });
   };
 
@@ -438,7 +450,7 @@ const Admin = () => {
                     <h3 className="font-semibold text-foreground">Add New Notice</h3>
                     <Button variant="ghost" size="icon" onClick={() => {
                       setShowAddNoticeForm(false);
-                      clearNoticeAttachment();
+                      clearNoticeAttachments();
                     }}>
                       <X className="w-4 h-4" />
                     </Button>
@@ -473,62 +485,12 @@ const Admin = () => {
                       />
                     </div>
                     
-                    {/* File Upload for Image or PDF */}
-                    <div>
-                      <Label htmlFor="notice-attachment" className="block mb-2">
-                        Attachment (Image or PDF)
-                      </Label>
-                      <div className="space-y-3">
-                        <Input
-                          id="notice-attachment"
-                          type="file"
-                          accept="image/*,.pdf"
-                          onChange={handleNoticeAttachmentChange}
-                          className="cursor-pointer"
-                        />
-                        <p className="text-xs text-muted-foreground">
-                          Supported: JPG, PNG, WEBP, PDF
-                        </p>
-                        
-                        {/* Attachment Preview */}
-                        {noticeAttachment && (
-                          <div className="relative border border-border rounded-lg p-3">
-                            {noticeAttachment.type === 'image' ? (
-                              <div className="flex items-center gap-3">
-                                <img 
-                                  src={noticeAttachment.preview} 
-                                  alt="Preview" 
-                                  className="w-20 h-20 object-cover rounded-lg"
-                                />
-                                <div className="flex-1 min-w-0">
-                                  <p className="text-sm font-medium truncate">{noticeAttachment.name}</p>
-                                  <p className="text-xs text-muted-foreground">Image</p>
-                                </div>
-                              </div>
-                            ) : (
-                              <div className="flex items-center gap-3">
-                                <div className="w-12 h-12 bg-destructive/10 rounded-lg flex items-center justify-center">
-                                  <FileText className="w-6 h-6 text-destructive" />
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                  <p className="text-sm font-medium truncate">{noticeAttachment.name}</p>
-                                  <p className="text-xs text-muted-foreground">PDF Document</p>
-                                </div>
-                              </div>
-                            )}
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="absolute top-1 right-1"
-                              onClick={clearNoticeAttachment}
-                            >
-                              <X className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        )}
-                      </div>
-                      {/* TODO: Backend Integration - Upload file to storage */}
-                    </div>
+                    {/* Multi-File Upload for Images and PDFs */}
+                    <MultiFileUploader
+                      files={noticeAttachments}
+                      onChange={setNoticeAttachments}
+                      label="Attachments (Multiple Images & PDFs)"
+                    />
                     
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                       <label className="flex items-center gap-2 text-sm">
@@ -543,7 +505,7 @@ const Admin = () => {
                       <div className="flex gap-2 w-full sm:w-auto">
                         <Button variant="outline" onClick={() => {
                           setShowAddNoticeForm(false);
-                          clearNoticeAttachment();
+                          clearNoticeAttachments();
                         }} className="flex-1 sm:flex-none">
                           Cancel
                         </Button>
@@ -562,7 +524,10 @@ const Admin = () => {
                 <div className="bg-card rounded-xl p-4 sm:p-6 shadow-md border-2 border-primary">
                   <div className="flex items-center justify-between mb-6">
                     <h3 className="font-semibold text-foreground text-lg">Edit Notice</h3>
-                    <Button variant="ghost" size="icon" onClick={() => setEditingNotice(null)}>
+                    <Button variant="ghost" size="icon" onClick={() => {
+                      setEditingNotice(null);
+                      clearEditAttachments();
+                    }}>
                       <X className="w-4 h-4" />
                     </Button>
                   </div>
@@ -596,19 +561,14 @@ const Admin = () => {
                       />
                     </div>
                     
-                    {/* Current Attachment Preview */}
-                    {editingNotice.attachment && (
-                      <div>
-                        <Label className="block mb-2">Current Attachment</Label>
-                        <NoticeAttachment
-                          attachment={editingNotice.attachment}
-                          attachmentType={editingNotice.attachmentType}
-                          attachmentName={editingNotice.attachmentName}
-                          title={editingNotice.title}
-                          variant="list"
-                        />
-                      </div>
-                    )}
+                    {/* Multi-File Upload for Attachments */}
+                    <MultiFileUploader
+                      files={newEditAttachments}
+                      onChange={setNewEditAttachments}
+                      existingAttachments={editingNoticeAttachments}
+                      onRemoveExisting={removeExistingAttachment}
+                      label="Attachments (Images & PDFs)"
+                    />
                     
                     {/* Mark as New */}
                     <div>
@@ -628,7 +588,10 @@ const Admin = () => {
                       <Button onClick={updateNotice} className="flex-1 sm:flex-none">
                         Save Changes
                       </Button>
-                      <Button variant="outline" onClick={() => setEditingNotice(null)} className="flex-1 sm:flex-none">
+                      <Button variant="outline" onClick={() => {
+                        setEditingNotice(null);
+                        clearEditAttachments();
+                      }} className="flex-1 sm:flex-none">
                         Cancel
                       </Button>
                     </div>
@@ -656,7 +619,7 @@ const Admin = () => {
                         <p className="text-sm text-muted-foreground mt-1">{notice.date}</p>
                       </div>
                       <div className="flex gap-2">
-                        <Button variant="ghost" size="icon" onClick={() => setEditingNotice(notice)}>
+                        <Button variant="ghost" size="icon" onClick={() => startEditingNotice(notice)}>
                           <Edit2 className="w-4 h-4" />
                         </Button>
                         <Button variant="ghost" size="icon" className="text-destructive" onClick={() => deleteNotice(notice.id)}>
