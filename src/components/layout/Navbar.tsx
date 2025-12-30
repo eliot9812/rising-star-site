@@ -47,7 +47,6 @@ const Navbar = () => {
           <Link to="/" className="flex items-center gap-2 sm:gap-3 group min-w-0 flex-1 lg:flex-none">
             <div className={cn(
               'w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center transition-all duration-300 flex-shrink-0',
-              isScrolled ? 'bg-secondary' : 'bg-secondary-foreground/20'
             )}>
               <img src="/images/logo1.png" alt="Logo" className="w-full h-full object-contain" />
             </div>
