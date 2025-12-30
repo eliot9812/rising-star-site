@@ -368,7 +368,7 @@ const Admin = () => {
                     {tab.count > 0 && (
                       <span className={cn(
                         'px-2 py-0.5 rounded-full text-xs font-medium',
-                        activeTab === tab.id ? 'bg-primary-foreground/20' : 'bg-primary/10 text-primary'
+                        activeTab === tab.id ? 'bg-red-600 text-white' : 'bg-red-600 text-white'
                       )}>
                         {tab.count}
                       </span>
