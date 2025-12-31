@@ -97,22 +97,22 @@ const Index = () => {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <img 
-                src="https://images.unsplash.com/photo-1580582932707-520aed937b7b?w=400"
+                src="public/images/school.jpg"
                 alt="School Building"
                 className="rounded-xl shadow-school w-full h-48 object-cover"
               />
               <img 
-                src="https://images.unsplash.com/photo-1427504494785-3a9ca7044f45?w=400"
+                src="public/images/school1.jpg"
                 alt="Students Learning"
                 className="rounded-xl shadow-school w-full h-48 object-cover mt-8"
               />
               <img 
-                src="https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=400"
+                src="public/images/school5.jpg"
                 alt="Science Lab"
                 className="rounded-xl shadow-school w-full h-48 object-cover"
               />
               <img 
-                src="https://images.unsplash.com/photo-1571260899304-425eee4c7efc?w=400"
+                src="public/images/school3.jpg"
                 alt="Library"
                 className="rounded-xl shadow-school w-full h-48 object-cover mt-8"
               />

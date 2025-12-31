@@ -32,7 +32,7 @@ const About = () => {
             </div>
             <div className="relative">
               <img 
-                src="https://images.unsplash.com/photo-1580582932707-520aed937b7b?w=600"
+                src="public/images/school4.jpg"
                 alt="School Campus"
                 className="rounded-xl shadow-school w-full"
               />
