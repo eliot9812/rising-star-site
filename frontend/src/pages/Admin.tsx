@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
-import { notices as initialNotices, galleryImages as initialGallery, contactMessages as initialMessages, admissionForms as initialAdmissions, Notice, GalleryImage, ContactMessage, AdmissionForm, NoticeAttachmentData } from '@/data/mockData';
+import { notices as initialNotices, galleryEvents as initialGalleryEvents, contactMessages as initialMessages, admissionForms as initialAdmissions, Notice, GalleryEvent, GalleryEventPhoto, ContactMessage, AdmissionForm, NoticeAttachmentData } from '@/data/mockData';
 import NoticeAttachment from '@/components/shared/NoticeAttachment';
 import MultiFileUploader, { FileWithPreview } from '@/components/admin/MultiFileUploader';
 import {
@@ -39,13 +39,13 @@ const Admin = () => {
 
   // State for managing data
   const [notices, setNotices] = useState<Notice[]>(initialNotices);
-  const [gallery, setGallery] = useState<GalleryImage[]>(initialGallery);
+  const [galleryEvents, setGalleryEvents] = useState<GalleryEvent[]>(initialGalleryEvents);
   const [messages, setMessages] = useState<ContactMessage[]>(initialMessages);
   const [admissions, setAdmissions] = useState<AdmissionForm[]>(initialAdmissions);
 
   // Form visibility states
   const [showAddNoticeForm, setShowAddNoticeForm] = useState(false);
-  const [showAddImageForm, setShowAddImageForm] = useState(false);
+  const [showAddEventForm, setShowAddEventForm] = useState(false);
 
   // Edit states
   const [editingNotice, setEditingNotice] = useState<Notice | null>(null);
@@ -64,9 +64,15 @@ const Admin = () => {
   const [editingNoticeAttachments, setEditingNoticeAttachments] = useState<NoticeAttachmentData[]>([]);
   const [newEditAttachments, setNewEditAttachments] = useState<FileWithPreview[]>([]);
   
-  // Gallery state with multi-file upload support
+  // Gallery event state with multi-file upload support
   // TODO: Backend Integration - Replace Object URLs with actual upload API
-  const [selectedFiles, setSelectedFiles] = useState<{ file: File; preview: string; alt: string }[]>([]);
+  const [newEvent, setNewEvent] = useState({ eventName: '', description: '' });
+  const [eventPhotos, setEventPhotos] = useState<{ file: File; preview: string; alt: string }[]>([]);
+
+  // Edit event states
+  const [editingEvent, setEditingEvent] = useState<GalleryEvent | null>(null);
+  const [editEventPhotos, setEditEventPhotos] = useState<GalleryEventPhoto[]>([]);
+  const [newEditEventPhotos, setNewEditEventPhotos] = useState<{ file: File; preview: string; alt: string }[]>([]);
 
   // Message modal state
   const [viewingMessage, setViewingMessage] = useState<ContactMessage | null>(null);
@@ -104,7 +110,7 @@ const Admin = () => {
 
   const tabs = [
     { id: 'notices' as AdminTab, label: 'Notices', icon: Bell, count: notices.length },
-    { id: 'gallery' as AdminTab, label: 'Gallery', icon: Image, count: gallery.length },
+    { id: 'gallery' as AdminTab, label: 'Gallery', icon: Image, count: galleryEvents.length },
     { id: 'messages' as AdminTab, label: 'Messages', icon: Mail, count: messages.filter(m => !m.isRead).length },
     { id: 'admissions' as AdminTab, label: 'Admissions', icon: UserPlus, count: admissions.filter(a => a.status === 'pending').length },
   ];
@@ -194,9 +200,9 @@ const Admin = () => {
     toast({ title: 'Notice Deleted', description: 'Notice has been removed.' });
   };
 
-  // Gallery Management - Multi-file upload with Object URLs for frontend-only operation
+  // Gallery Event Management - Multi-file upload with Object URLs for frontend-only operation
   // TODO: Backend Integration - Replace Object URLs with actual upload API
-  const handleImageFilesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleEventPhotosChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     if (files.length > 0) {
       const newFiles = files.map(file => ({
@@ -204,48 +210,133 @@ const Admin = () => {
         preview: URL.createObjectURL(file),
         alt: file.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' ') // Default alt from filename
       }));
-      setSelectedFiles([...selectedFiles, ...newFiles]);
+      setEventPhotos([...eventPhotos, ...newFiles]);
     }
     // Reset input to allow selecting same files again
     e.target.value = '';
   };
 
-  const updateFileAlt = (index: number, alt: string) => {
-    setSelectedFiles(selectedFiles.map((f, i) => i === index ? { ...f, alt } : f));
+  const updateEventPhotoAlt = (index: number, alt: string) => {
+    setEventPhotos(eventPhotos.map((f, i) => i === index ? { ...f, alt } : f));
   };
 
-  const removeSelectedFile = (index: number) => {
-    URL.revokeObjectURL(selectedFiles[index].preview);
-    setSelectedFiles(selectedFiles.filter((_, i) => i !== index));
+  const removeEventPhoto = (index: number) => {
+    URL.revokeObjectURL(eventPhotos[index].preview);
+    setEventPhotos(eventPhotos.filter((_, i) => i !== index));
   };
 
-  const addImages = () => {
-    if (selectedFiles.length === 0) {
-      toast({ title: 'Error', description: 'Please select at least one image.', variant: 'destructive' });
+  const clearEventForm = () => {
+    eventPhotos.forEach(f => URL.revokeObjectURL(f.preview));
+    setEventPhotos([]);
+    setNewEvent({ eventName: '', description: '' });
+    setShowAddEventForm(false);
+  };
+
+  const addEvent = () => {
+    if (!newEvent.eventName.trim()) {
+      toast({ title: 'Error', description: 'Please enter an event name.', variant: 'destructive' });
+      return;
+    }
+    if (eventPhotos.length === 0) {
+      toast({ title: 'Error', description: 'Please add at least one photo.', variant: 'destructive' });
       return;
     }
 
     // TODO: Backend Integration - Upload files to server/storage and get permanent URLs
     // Currently using Object URLs which work for current session only
-    const newImages: GalleryImage[] = selectedFiles.map((file, index) => ({
+    const photos: GalleryEventPhoto[] = eventPhotos.map((file, index) => ({
       id: `${Date.now()}-${index}`,
-      src: file.preview, // In production, replace with uploaded file URL
-      alt: file.alt || `Image ${index + 1}`,
-      date: new Date().toISOString().split('T')[0],
+      src: file.preview,
+      alt: file.alt || `Photo ${index + 1}`,
     }));
 
-    setGallery([...newImages, ...gallery]);
-    setSelectedFiles([]);
-    setShowAddImageForm(false);
-    toast({ 
-      title: 'Images Added', 
-      description: `${newImages.length} image(s) added to gallery.` 
+    const newGalleryEvent: GalleryEvent = {
+      id: Date.now().toString(),
+      eventName: newEvent.eventName,
+      description: newEvent.description || newEvent.eventName,
+      coverPhoto: photos[0].src, // First photo as cover
+      photos,
+      date: new Date().toISOString().split('T')[0],
+    };
+
+    setGalleryEvents([newGalleryEvent, ...galleryEvents]);
+    setNewEvent({ eventName: '', description: '' });
+    setEventPhotos([]);
+    setShowAddEventForm(false);
+    toast({
+      title: 'Event Added',
+      description: `Event "${newGalleryEvent.eventName}" added with ${photos.length} photo(s).`
     });
   };
 
-  const deleteImage = (id: string) => {
-    setGallery(gallery.filter(img => img.id !== id));
-    toast({ title: 'Image Deleted', description: 'Image has been removed from gallery.' });
+  // Start editing an event
+  const startEditingEvent = (event: GalleryEvent) => {
+    setEditingEvent(event);
+    setEditEventPhotos([...event.photos]);
+    setNewEditEventPhotos([]);
+  };
+
+  // Handle new photos for editing
+  const handleEditEventPhotosChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length > 0) {
+      const newFiles = files.map(file => ({
+        file,
+        preview: URL.createObjectURL(file),
+        alt: file.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' ')
+      }));
+      setNewEditEventPhotos([...newEditEventPhotos, ...newFiles]);
+    }
+    e.target.value = '';
+  };
+
+  const removeExistingEventPhoto = (id: string) => {
+    setEditEventPhotos(editEventPhotos.filter(p => p.id !== id));
+  };
+
+  const removeNewEditEventPhoto = (index: number) => {
+    URL.revokeObjectURL(newEditEventPhotos[index].preview);
+    setNewEditEventPhotos(newEditEventPhotos.filter((_, i) => i !== index));
+  };
+
+  const clearEditEventForm = () => {
+    newEditEventPhotos.forEach(f => URL.revokeObjectURL(f.preview));
+    setNewEditEventPhotos([]);
+    setEditEventPhotos([]);
+    setEditingEvent(null);
+  };
+
+  const updateEvent = () => {
+    if (!editingEvent) return;
+
+    // Combine existing photos with new ones
+    const newPhotos: GalleryEventPhoto[] = newEditEventPhotos.map((f, index) => ({
+      id: `${Date.now()}-new-${index}`,
+      src: f.preview,
+      alt: f.alt || `Photo ${index + 1}`,
+    }));
+
+    const allPhotos = [...editEventPhotos, ...newPhotos];
+
+    if (allPhotos.length === 0) {
+      toast({ title: 'Error', description: 'Event must have at least one photo.', variant: 'destructive' });
+      return;
+    }
+
+    const updatedEvent: GalleryEvent = {
+      ...editingEvent,
+      coverPhoto: allPhotos[0].src,
+      photos: allPhotos,
+    };
+
+    setGalleryEvents(galleryEvents.map(e => e.id === editingEvent.id ? updatedEvent : e));
+    clearEditEventForm();
+    toast({ title: 'Event Updated', description: 'Event has been updated successfully.' });
+  };
+
+  const deleteEvent = (id: string) => {
+    setGalleryEvents(galleryEvents.filter(e => e.id !== id));
+    toast({ title: 'Event Deleted', description: 'Event has been removed from gallery.' });
   };
 
   // Message Management
@@ -636,127 +727,294 @@ const Admin = () => {
           {/* Gallery Tab */}
           {activeTab === 'gallery' && (
             <div className="space-y-6">
-              {/* Add Image Button */}
-              {!showAddImageForm && (
-                <Button onClick={() => setShowAddImageForm(true)} className="gap-2">
+              {/* Add Event Button */}
+              {!showAddEventForm && !editingEvent && (
+                <Button onClick={() => setShowAddEventForm(true)} className="gap-2">
                   <Plus className="w-4 h-4" />
-                  Add Gallery Images
+                  Add New Event
                 </Button>
               )}
 
-              {/* Add Images Form - Multi-file Upload */}
-              {showAddImageForm && (
+              {/* Add Event Form */}
+              {showAddEventForm && (
                 <div className="bg-card rounded-xl p-6 shadow-md border border-border">
                   <div className="flex items-center justify-between mb-4">
-                    <h3 className="font-semibold text-foreground">Add New Images</h3>
-                    <Button variant="ghost" size="icon" onClick={() => {
-                      setShowAddImageForm(false);
-                      selectedFiles.forEach(f => URL.revokeObjectURL(f.preview));
-                      setSelectedFiles([]);
-                    }}>
+                    <h3 className="font-semibold text-foreground">Add New Event</h3>
+                    <Button variant="ghost" size="icon" onClick={clearEventForm}>
                       <X className="w-4 h-4" />
                     </Button>
                   </div>
-                  
-                  {/* File Input for Multiple Image Selection */}
-                  <div className="mb-4">
-                    <Label htmlFor="image-upload" className="block mb-2 text-sm font-medium">
-                      Select Images (Multiple)
-                    </Label>
-                    <Input
-                      id="image-upload"
-                      type="file"
-                      accept="image/*"
-                      multiple
-                      onChange={handleImageFilesChange}
-                      className="cursor-pointer"
-                    />
-                    <p className="text-xs text-muted-foreground mt-1">
-                      You can select multiple images at once. Click again to add more.
-                    </p>
-                    {/* TODO: Backend Integration - Connect to file upload API */}
-                  </div>
 
-                  {/* Selected Images Preview */}
-                  {selectedFiles.length > 0 && (
-                    <div className="mb-4">
-                      <Label className="block mb-2 text-sm font-medium">
-                        Selected Images ({selectedFiles.length})
+                  <div className="space-y-4">
+                    {/* Event Name */}
+                    <div>
+                      <Label htmlFor="event-name" className="block mb-2">Event Name *</Label>
+                      <Input
+                        id="event-name"
+                        placeholder="Enter event name (e.g., Annual Sports Day 2024)"
+                        value={newEvent.eventName}
+                        onChange={(e) => setNewEvent({ ...newEvent, eventName: e.target.value })}
+                      />
+                    </div>
+
+                    {/* Event Description */}
+                    <div>
+                      <Label htmlFor="event-desc" className="block mb-2">Description (for identification)</Label>
+                      <Textarea
+                        id="event-desc"
+                        placeholder="Brief description of the event for admin reference..."
+                        value={newEvent.description}
+                        onChange={(e) => setNewEvent({ ...newEvent, description: e.target.value })}
+                        rows={2}
+                      />
+                    </div>
+
+                    {/* File Input for Multiple Photo Selection */}
+                    <div>
+                      <Label htmlFor="event-photos" className="block mb-2 text-sm font-medium">
+                        Event Photos (Multiple) *
                       </Label>
-                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                        {selectedFiles.map((file, index) => (
-                          <div key={index} className="relative group">
-                            <div className="aspect-square rounded-lg overflow-hidden border-2 border-border">
-                              <img 
-                                src={file.preview} 
-                                alt={file.alt} 
-                                className="w-full h-full object-cover"
+                      <Input
+                        id="event-photos"
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        onChange={handleEventPhotosChange}
+                        className="cursor-pointer"
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">
+                        First photo will be used as the cover image. You can add more photos by clicking again.
+                      </p>
+                    </div>
+
+                    {/* Selected Photos Preview */}
+                    {eventPhotos.length > 0 && (
+                      <div>
+                        <Label className="block mb-2 text-sm font-medium">
+                          Selected Photos ({eventPhotos.length})
+                        </Label>
+                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                          {eventPhotos.map((file, index) => (
+                            <div key={index} className="relative group">
+                              <div className={`aspect-square rounded-lg overflow-hidden border-2 ${index === 0 ? 'border-primary' : 'border-border'}`}>
+                                <img
+                                  src={file.preview}
+                                  alt={file.alt}
+                                  className="w-full h-full object-cover"
+                                />
+                                {index === 0 && (
+                                  <span className="absolute top-2 left-2 bg-primary text-primary-foreground text-xs px-2 py-0.5 rounded">
+                                    Cover
+                                  </span>
+                                )}
+                              </div>
+                              <button
+                                onClick={() => removeEventPhoto(index)}
+                                className="absolute -top-2 -right-2 w-6 h-6 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center shadow-md hover:bg-destructive/90 transition-colors"
+                              >
+                                <X className="w-4 h-4" />
+                              </button>
+                              <Input
+                                placeholder="Photo description"
+                                value={file.alt}
+                                onChange={(e) => updateEventPhotoAlt(index, e.target.value)}
+                                className="mt-2 text-xs h-8"
                               />
                             </div>
-                            <button
-                              onClick={() => removeSelectedFile(index)}
-                              className="absolute -top-2 -right-2 w-6 h-6 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center shadow-md hover:bg-destructive/90 transition-colors"
-                            >
-                              <X className="w-4 h-4" />
-                            </button>
-                            <Input
-                              placeholder="Description"
-                              value={file.alt}
-                              onChange={(e) => updateFileAlt(index, e.target.value)}
-                              className="mt-2 text-xs h-8"
-                            />
-                          </div>
-                        ))}
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    )}
 
-                  <div className="flex gap-2">
-                    <Button variant="outline" onClick={() => {
-                      setShowAddImageForm(false);
-                      selectedFiles.forEach(f => URL.revokeObjectURL(f.preview));
-                      setSelectedFiles([]);
-                    }}>
-                      Cancel
-                    </Button>
-                    <Button onClick={addImages} disabled={selectedFiles.length === 0}>
-                      <Plus className="w-4 h-4" />
-                      Add {selectedFiles.length > 0 ? `${selectedFiles.length} Image${selectedFiles.length > 1 ? 's' : ''}` : 'Images'}
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button variant="outline" onClick={clearEventForm}>
+                        Cancel
+                      </Button>
+                      <Button onClick={addEvent} disabled={!newEvent.eventName.trim() || eventPhotos.length === 0}>
+                        <Plus className="w-4 h-4" />
+                        Add Event
+                      </Button>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      * Photos are stored locally in this session. Backend integration required for permanent storage.
+                    </p>
                   </div>
-                  <p className="text-xs text-muted-foreground mt-2">
-                    * Images are stored locally in this session. Backend integration required for permanent storage.
-                  </p>
                 </div>
               )}
 
-              {/* Gallery Grid */}
+              {/* Edit Event Form */}
+              {editingEvent && (
+                <div className="bg-card rounded-xl p-6 shadow-md border-2 border-primary">
+                  <div className="flex items-center justify-between mb-6">
+                    <h3 className="font-semibold text-foreground text-lg">Edit Event</h3>
+                    <Button variant="ghost" size="icon" onClick={clearEditEventForm}>
+                      <X className="w-4 h-4" />
+                    </Button>
+                  </div>
+
+                  <div className="space-y-6">
+                    {/* Event Name */}
+                    <div>
+                      <Label className="block mb-2">Event Name *</Label>
+                      <Input
+                        value={editingEvent.eventName}
+                        onChange={(e) => setEditingEvent({ ...editingEvent, eventName: e.target.value })}
+                      />
+                    </div>
+
+                    {/* Event Description */}
+                    <div>
+                      <Label className="block mb-2">Description (for identification)</Label>
+                      <Textarea
+                        value={editingEvent.description}
+                        onChange={(e) => setEditingEvent({ ...editingEvent, description: e.target.value })}
+                        rows={2}
+                      />
+                    </div>
+
+                    {/* Existing Photos */}
+                    {editEventPhotos.length > 0 && (
+                      <div>
+                        <Label className="block mb-2 text-sm font-medium">
+                          Existing Photos ({editEventPhotos.length})
+                        </Label>
+                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                          {editEventPhotos.map((photo, index) => (
+                            <div key={photo.id} className="relative group">
+                              <div className={`aspect-square rounded-lg overflow-hidden border-2 ${index === 0 ? 'border-primary' : 'border-border'}`}>
+                                <img
+                                  src={photo.src}
+                                  alt={photo.alt}
+                                  className="w-full h-full object-cover"
+                                />
+                                {index === 0 && (
+                                  <span className="absolute top-2 left-2 bg-primary text-primary-foreground text-xs px-2 py-0.5 rounded">
+                                    Cover
+                                  </span>
+                                )}
+                              </div>
+                              <button
+                                onClick={() => removeExistingEventPhoto(photo.id)}
+                                className="absolute -top-2 -right-2 w-6 h-6 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center shadow-md hover:bg-destructive/90 transition-colors"
+                              >
+                                <X className="w-4 h-4" />
+                              </button>
+                              <p className="mt-2 text-xs text-muted-foreground truncate">{photo.alt}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Add More Photos */}
+                    <div>
+                      <Label htmlFor="edit-event-photos" className="block mb-2 text-sm font-medium">
+                        Add More Photos
+                      </Label>
+                      <Input
+                        id="edit-event-photos"
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        onChange={handleEditEventPhotosChange}
+                        className="cursor-pointer"
+                      />
+                    </div>
+
+                    {/* New Photos Preview */}
+                    {newEditEventPhotos.length > 0 && (
+                      <div>
+                        <Label className="block mb-2 text-sm font-medium">
+                          New Photos ({newEditEventPhotos.length})
+                        </Label>
+                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                          {newEditEventPhotos.map((file, index) => (
+                            <div key={index} className="relative group">
+                              <div className="aspect-square rounded-lg overflow-hidden border-2 border-green-500">
+                                <img
+                                  src={file.preview}
+                                  alt={file.alt}
+                                  className="w-full h-full object-cover"
+                                />
+                                <span className="absolute top-2 left-2 bg-green-600 text-white text-xs px-2 py-0.5 rounded">
+                                  New
+                                </span>
+                              </div>
+                              <button
+                                onClick={() => removeNewEditEventPhoto(index)}
+                                className="absolute -top-2 -right-2 w-6 h-6 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center shadow-md hover:bg-destructive/90 transition-colors"
+                              >
+                                <X className="w-4 h-4" />
+                              </button>
+                              <Input
+                                placeholder="Photo description"
+                                value={file.alt}
+                                onChange={(e) => setNewEditEventPhotos(newEditEventPhotos.map((f, i) => i === index ? { ...f, alt: e.target.value } : f))}
+                                className="mt-2 text-xs h-8"
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Action Buttons */}
+                    <div className="flex gap-3 pt-4 border-t border-border">
+                      <Button onClick={updateEvent}>
+                        Save Changes
+                      </Button>
+                      <Button variant="outline" onClick={clearEditEventForm}>
+                        Cancel
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Events List */}
               <div className="bg-card rounded-xl shadow-md overflow-hidden">
                 <div className="p-4 border-b border-border">
-                  <h3 className="font-semibold text-foreground">All Images ({gallery.length})</h3>
+                  <h3 className="font-semibold text-foreground">All Events ({galleryEvents.length})</h3>
                 </div>
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4">
-                  {gallery.map((image) => (
-                    <div key={image.id} className="relative group rounded-xl overflow-hidden shadow-md">
-                      <img
-                        src={image.src}
-                        alt={image.alt}
-                        className="w-full aspect-square object-cover"
-                      />
-                      <div className="absolute inset-0 bg-foreground/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                        <Button
-                          variant="destructive"
-                          size="icon"
-                          onClick={() => deleteImage(image.id)}
-                        >
+                <div className="divide-y divide-border">
+                  {galleryEvents.map((event) => (
+                    <div key={event.id} className="p-4 flex items-center gap-4">
+                      {/* Cover Photo Thumbnail */}
+                      <div className="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0">
+                        <img
+                          src={event.coverPhoto}
+                          alt={event.eventName}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+
+                      {/* Event Info */}
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-semibold text-foreground truncate">{event.eventName}</h4>
+                        <p className="text-sm text-muted-foreground truncate">{event.description}</p>
+                        <div className="flex items-center gap-4 mt-1 text-xs text-muted-foreground">
+                          <span>{event.date}</span>
+                          <span>{event.photos.length} photo(s)</span>
+                        </div>
+                      </div>
+
+                      {/* Actions */}
+                      <div className="flex gap-2 flex-shrink-0">
+                        <Button variant="ghost" size="icon" onClick={() => startEditingEvent(event)}>
+                          <Edit2 className="w-4 h-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="text-destructive" onClick={() => deleteEvent(event.id)}>
                           <Trash2 className="w-4 h-4" />
                         </Button>
                       </div>
-                      <div className="absolute bottom-0 left-0 right-0 p-2 bg-foreground/80 text-primary-foreground">
-                        <p className="text-sm truncate">{image.alt}</p>
-                      </div>
                     </div>
                   ))}
+                  {galleryEvents.length === 0 && (
+                    <div className="p-12 text-center">
+                      <Image className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+                      <p className="text-muted-foreground">No events added yet</p>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

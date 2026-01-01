@@ -10,7 +10,7 @@ const Index = () => {
   const stats = [
     { icon: Users, value: schoolInfo.students, label: 'Students' },
     { icon: BookOpen, value: schoolInfo.teachers, label: 'Teachers' },
-    { icon: Award, value: '25+', label: 'Years of Excellence' },
+    { icon: Award, value: '33+', label: 'Years of Excellence' },
     { icon: GraduationCap, value: '95%', label: 'Pass Rate' },
   ];
 

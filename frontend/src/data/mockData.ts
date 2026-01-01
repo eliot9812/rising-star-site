@@ -62,6 +62,21 @@ export interface GalleryImage {
   // TODO: Add category, tags for filtering
 }
 
+export interface GalleryEventPhoto {
+  id: string;
+  src: string;
+  alt: string;
+}
+
+export interface GalleryEvent {
+  id: string; // Primary key - UUID recommended for production
+  eventName: string; // Event name/title
+  description: string; // Event description for admin identification
+  coverPhoto: string; // Cover image for the event grid display
+  photos: GalleryEventPhoto[]; // All photos from this event
+  date: string; // ISO 8601 format - event date
+}
+
 export interface ContactMessage {
   id: string; // Primary key - UUID recommended for production
   name: string;
@@ -148,6 +163,77 @@ export const galleryImages: GalleryImage[] = [
   { id: '8', src: 'https://images.unsplash.com/photo-1509062522246-3755977927d7?w=800', alt: 'Computer Lab', date: '2024-11-01' },
 ];
 
+export const galleryEvents: GalleryEvent[] = [
+  {
+    id: '1',
+    eventName: 'Annual Sports Day 2024',
+    description: 'Inter-house sports competition with track and field events',
+    coverPhoto: 'https://images.unsplash.com/photo-1546519638-68e109498ffc?w=800',
+    date: '2024-11-25',
+    photos: [
+      { id: '1-1', src: 'https://images.unsplash.com/photo-1546519638-68e109498ffc?w=800', alt: 'Sports Day Opening' },
+      { id: '1-2', src: 'https://images.unsplash.com/photo-1461896836934- voices-2d68a7c5f8e?w=800', alt: '100m Race' },
+      { id: '1-3', src: 'https://images.unsplash.com/photo-1517649763962-0c623066013b?w=800', alt: 'Long Jump Competition' },
+      { id: '1-4', src: 'https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=800', alt: 'Basketball Match' },
+      { id: '1-5', src: 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=800', alt: 'Football Tournament' },
+      { id: '1-6', src: 'https://images.unsplash.com/photo-1587280501635-68a0e82cd5ff?w=800', alt: 'Prize Distribution' },
+    ]
+  },
+  {
+    id: '2',
+    eventName: 'Cultural Program 2024',
+    description: 'Annual cultural event featuring dance, music and drama performances',
+    coverPhoto: 'https://images.unsplash.com/photo-1594608661623-aa0bd3a69d98?w=800',
+    date: '2024-11-10',
+    photos: [
+      { id: '2-1', src: 'https://images.unsplash.com/photo-1594608661623-aa0bd3a69d98?w=800', alt: 'Cultural Dance Performance' },
+      { id: '2-2', src: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=800', alt: 'Music Performance' },
+      { id: '2-3', src: 'https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?w=800', alt: 'Traditional Dance' },
+      { id: '2-4', src: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800', alt: 'Stage Performance' },
+      { id: '2-5', src: 'https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?w=800', alt: 'Group Dance' },
+    ]
+  },
+  {
+    id: '3',
+    eventName: 'Science Exhibition 2024',
+    description: 'Student science projects and experiments showcase',
+    coverPhoto: 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=800',
+    date: '2024-11-15',
+    photos: [
+      { id: '3-1', src: 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=800', alt: 'Science Exhibition Opening' },
+      { id: '3-2', src: 'https://images.unsplash.com/photo-1532094349884-543bc11b234d?w=800', alt: 'Chemistry Experiments' },
+      { id: '3-3', src: 'https://images.unsplash.com/photo-1576319155264-99536e0be1ee?w=800', alt: 'Physics Projects' },
+      { id: '3-4', src: 'https://images.unsplash.com/photo-1628595351029-c2bf17511435?w=800', alt: 'Student Presentations' },
+    ]
+  },
+  {
+    id: '4',
+    eventName: 'Award Ceremony 2024',
+    description: 'Annual academic excellence and achievement awards',
+    coverPhoto: 'https://images.unsplash.com/photo-1577896851231-70ef18881754?w=800',
+    date: '2024-11-05',
+    photos: [
+      { id: '4-1', src: 'https://images.unsplash.com/photo-1577896851231-70ef18881754?w=800', alt: 'Award Ceremony Stage' },
+      { id: '4-2', src: 'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=800', alt: 'Students Receiving Awards' },
+      { id: '4-3', src: 'https://images.unsplash.com/photo-1627556704302-624286467c65?w=800', alt: 'Top Achievers' },
+      { id: '4-4', src: 'https://images.unsplash.com/photo-1559234938-b60fff04894d?w=800', alt: 'Group Photo Winners' },
+    ]
+  },
+  {
+    id: '5',
+    eventName: 'School Infrastructure',
+    description: 'Campus facilities and infrastructure photos',
+    coverPhoto: 'https://images.unsplash.com/photo-1580582932707-520aed937b7b?w=800',
+    date: '2024-12-01',
+    photos: [
+      { id: '5-1', src: 'https://images.unsplash.com/photo-1580582932707-520aed937b7b?w=800', alt: 'School Building' },
+      { id: '5-2', src: 'https://images.unsplash.com/photo-1571260899304-425eee4c7efc?w=800', alt: 'Library' },
+      { id: '5-3', src: 'https://images.unsplash.com/photo-1509062522246-3755977927d7?w=800', alt: 'Computer Lab' },
+      { id: '5-4', src: 'https://images.unsplash.com/photo-1427504494785-3a9ca7044f45?w=800', alt: 'Classroom' },
+    ]
+  },
+];
+
 export const contactMessages: ContactMessage[] = [
   { id: '1', name: 'Ram Sharma', email: 'ram@example.com', phone: '+977-9841234567', message: 'I would like to know about the admission process for Class 5.', date: '2024-12-20', isRead: false },
   { id: '2', name: 'Sita Thapa', email: 'sita@example.com', phone: '+977-9851234567', message: 'What are the school timings and transportation facilities?', date: '2024-12-19', isRead: true },
@@ -168,7 +254,7 @@ export const schoolInfo = {
   phone: '+977-021-547985',
   email: 'therisingenglishschool@gmail.com',
   website: '',
-  established: '1995',
+  established: '1992',
   students: '1200+',
   teachers: '80+',
   branches: '2',
