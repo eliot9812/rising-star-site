@@ -1,4 +1,4 @@
-import { principal, vicePrincipal, schoolInfo } from '@/data/mockData';
+import { chairman, principal, vicePrincipal, schoolInfo } from '@/data/mockData';
 import { Target, Eye, Heart, Award } from 'lucide-react';
 import PageHero from '@/components/shared/PageHero';
 
@@ -32,7 +32,7 @@ const About = () => {
             </div>
             <div className="relative">
               <img 
-                src="public/images/school4.jpg"
+                src="/images/school4.jpg"
                 alt="School Campus"
                 className="rounded-xl shadow-school w-full"
               />
@@ -102,22 +102,51 @@ const About = () => {
             </h2>
           </div>
 
-          {/* Principal */}
+          {/* Chairman */}
           <div className="grid lg:grid-cols-3 gap-8 mb-16">
             <div className="lg:col-span-1">
               <div className="sticky top-24">
-                <img 
+                <img
+                  src={chairman.image}
+                  alt={chairman.name}
+                  className="w-full rounded-xl shadow-school mb-4"
+                />
+                <div className="text-center">
+                  <h3 className="font-heading text-xl font-bold text-foreground">{chairman.name}</h3>
+                  <p className="text-primary font-medium">{chairman.position}</p>
+                </div>
+              </div>
+            </div>
+            <div className="lg:col-span-2">
+              <div className="bg-primary/10 rounded-xl p-8">
+                <h3 className="font-heading text-2xl font-bold text-foreground mb-6">
+                  Message from the Chairman
+                </h3>
+                {chairman.message.split('\n\n').map((paragraph, index) => (
+                  <p key={index} className="text-muted-foreground leading-relaxed mb-4">
+                    {paragraph}
+                  </p>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Principal */}
+          <div className="grid lg:grid-cols-3 gap-8 mb-16">
+            <div className="lg:col-span-1 lg:order-2">
+              <div className="sticky top-24">
+                <img
                   src={principal.image}
                   alt={principal.name}
                   className="w-full rounded-xl shadow-school mb-4"
                 />
                 <div className="text-center">
                   <h3 className="font-heading text-xl font-bold text-foreground">{principal.name}</h3>
-                  <p className="text-primary font-medium">{principal.position}</p>
+                  <p className="text-secondary font-medium">{principal.position}</p>
                 </div>
               </div>
             </div>
-            <div className="lg:col-span-2">
+            <div className="lg:col-span-2 lg:order-1">
               <div className="bg-accent/50 rounded-xl p-8">
                 <h3 className="font-heading text-2xl font-bold text-foreground mb-6">
                   Message from the Principal
@@ -133,9 +162,9 @@ const About = () => {
 
           {/* Vice Principal */}
           <div className="grid lg:grid-cols-3 gap-8">
-            <div className="lg:col-span-1 lg:order-2">
+            <div className="lg:col-span-1">
               <div className="sticky top-24">
-                <img 
+                <img
                   src={vicePrincipal.image}
                   alt={vicePrincipal.name}
                   className="w-full rounded-xl shadow-school mb-4"
@@ -146,7 +175,7 @@ const About = () => {
                 </div>
               </div>
             </div>
-            <div className="lg:col-span-2 lg:order-1">
+            <div className="lg:col-span-2">
               <div className="bg-secondary/10 rounded-xl p-8">
                 <h3 className="font-heading text-2xl font-bold text-foreground mb-6">
                   Message from the Vice Principal

@@ -38,16 +38,16 @@ const MultiFileUploader = ({
   onRemoveExisting,
   label = 'Attachments (Images & PDFs)'
 }: MultiFileUploaderProps) => {
-  
+
   const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = Array.from(e.target.files || []);
-    
+
     const validFiles: FileWithPreview[] = [];
-    
+
     selectedFiles.forEach(file => {
       const isImage = file.type.startsWith('image/');
       const isPdf = file.type === 'application/pdf';
-      
+
       // Only accept images and PDFs
       if (isImage || isPdf) {
         validFiles.push({
@@ -59,11 +59,11 @@ const MultiFileUploader = ({
         });
       }
     });
-    
+
     if (validFiles.length > 0) {
       onChange([...files, ...validFiles]);
     }
-    
+
     // Reset input to allow selecting same files again
     e.target.value = '';
   }, [files, onChange]);
@@ -81,7 +81,7 @@ const MultiFileUploader = ({
   return (
     <div className="space-y-4">
       <Label className="block">{label}</Label>
-      
+
       {/* File Input */}
       <div className="border-2 border-dashed border-border rounded-lg p-6 text-center hover:border-primary/50 transition-colors">
         <Input
@@ -92,8 +92,8 @@ const MultiFileUploader = ({
           className="hidden"
           id="multi-file-upload"
         />
-        <label 
-          htmlFor="multi-file-upload" 
+        <label
+          htmlFor="multi-file-upload"
           className="cursor-pointer flex flex-col items-center gap-2"
         >
           <Upload className="w-8 h-8 text-muted-foreground" />
@@ -119,13 +119,13 @@ const MultiFileUploader = ({
           </p>
           <div className="grid gap-2">
             {existingAttachments.map((attachment) => (
-              <div 
+              <div
                 key={attachment.id}
                 className="relative flex items-center gap-3 p-3 bg-muted rounded-lg border border-border"
               >
                 {attachment.type === 'image' ? (
-                  <img 
-                    src={attachment.url} 
+                  <img
+                    src={attachment.url.startsWith('/uploads') ? `${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000'}${attachment.url}` : attachment.url}
                     alt={attachment.name}
                     className="w-12 h-12 object-cover rounded"
                   />
@@ -162,13 +162,13 @@ const MultiFileUploader = ({
           </p>
           <div className="grid gap-2">
             {files.map((file) => (
-              <div 
+              <div
                 key={file.id}
                 className="relative flex items-center gap-3 p-3 bg-muted rounded-lg border border-border"
               >
                 {file.type === 'image' ? (
-                  <img 
-                    src={file.preview} 
+                  <img
+                    src={file.preview}
                     alt={file.name}
                     className="w-12 h-12 object-cover rounded"
                   />

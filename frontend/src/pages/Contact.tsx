@@ -16,13 +16,40 @@ const Contact = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    toast({
-      title: 'Message Sent!',
-      description: 'Thank you for contacting us. We will get back to you soon.',
-    });
-    setFormData({ name: '', email: '', phone: '', message: '' });
-    setIsSubmitting(false);
+
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/contact`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        toast({
+          title: 'Message Sent!',
+          description: 'Thank you for contacting us. We will get back to you soon.',
+        });
+        setFormData({ name: '', email: '', phone: '', message: '' });
+      } else {
+        toast({
+          title: 'Error',
+          description: data.message || 'Failed to send message. Please try again.',
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to send message. Please try again later.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const contactInfo = [
@@ -34,8 +61,8 @@ const Contact = () => {
 
   return (
     <div className="min-h-screen">
-      <PageHero 
-        title="Contact Us" 
+      <PageHero
+        title="Contact Us"
         subtitle="We'd love to hear from you. Get in touch with us today."
         breadcrumbs={[{ label: 'Contact' }]}
       />
@@ -51,7 +78,7 @@ const Contact = () => {
                 Contact Information
               </h2>
               <p className="text-muted-foreground mb-6 sm:mb-8 text-sm sm:text-base">
-                Have questions about admissions, academics, or anything else? 
+                Have questions about admissions, academics, or anything else?
                 Reach out to us through any of the following channels.
               </p>
 
@@ -64,8 +91,8 @@ const Contact = () => {
                     <div className="min-w-0 flex-1">
                       <h3 className="font-semibold text-foreground text-sm sm:text-base">{info.title}</h3>
                       {info.link ? (
-                        <a 
-                          href={info.link} 
+                        <a
+                          href={info.link}
                           className="text-muted-foreground hover:text-primary transition-colors text-sm sm:text-base break-all"
                         >
                           {info.content}
@@ -154,9 +181,9 @@ const Contact = () => {
                     />
                   </div>
 
-                  <Button 
-                    type="submit" 
-                    size="lg" 
+                  <Button
+                    type="submit"
+                    size="lg"
                     className="w-full h-11 sm:h-12 text-sm sm:text-base"
                     disabled={isSubmitting}
                   >

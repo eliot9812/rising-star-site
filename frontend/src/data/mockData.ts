@@ -260,26 +260,39 @@ export const schoolInfo = {
   branches: '2',
 };
 
+export const chairman = {
+  name: 'Chairman Name',
+  position: 'Chairman',
+  image: '/images/chairman.jpg',
+  message: `Dear Stuends, I firmly believe that one of the most importand ages in our life is the prime youth which we all invest in education and such a crucial moment obviously raised expectations about the multiple forms of returns during the rest of our lives.
+
+Here, I would like to say that just as the selection of a right field of study for future career is a great challenge, So is the choice of a college for processional degrees.
+
+Management is about more than what we assume as a comfortable corporate office the big swivel chairs and a handsome salary and the accompanying perk, it is all about understanding the delicate balance that exists among people, raw material, information, technology, market force and national laws. The courses must take into account these factors. Additionaly, there must be a spotlight on the grooming of the students total personality so that they may become confident, acceptable and effective leaders in the globalized business environment.
+
+On this upgrade note, I wish the forth coming students oa time of great achievement at TREBS. The college, I assure leaves no stone unturned in putting in cent percent effort in unaveling and maximizing the potential of its students.`,
+};
+
 export const principal = {
   name: 'Gopal Prasad Pathak',
   position: 'Principal',
-  image: 'public/images/principal.png',
-  message: `Welcome to The Rising English Secondary Boarding School. For over two decades, we have been committed to providing quality education that nurtures young minds and prepares them for the challenges of tomorrow.
+  image: '/images/principal.png',
+  message: `Welcome to The Rising English Secondary Boarding School. I'd like to extend in most gratitude to our valued parents and guardians for the faith and belief showered upon The Tising English Boarding School.
 
-Our school believes in holistic development, combining academic excellence with character building, sports, and extracurricular activities. We strive to create an environment where every student can discover their potential and grow into responsible citizens.
+It is deeemed righteous to serve the seekers of knowledge and we want to empower every learner who wends his way to our school. Enthused by our motto."Quality education is our motto" we galvanize our students to spawn lasting passion for learning and enable them to look beyond their abilities and achieve what they believe not to be though of.
 
-I am proud of our dedicated faculty, state-of-the-art facilities, and the achievements of our students who have excelled in various fields. Together, we continue to uphold our motto of "Nurturing Minds, Building Futures."`,
+We mould our students to be supple, collaborative, creative, critical thinkers and proactive lifelong learners to adopt in the increasingly fluid and rapidly evolving global society.
+
+TREBS always emphasis on academic excellence and without it espouses extensive range of co-ciricular and extra curricular activities to help them perceive the world from diverse angles.`,
 };
 
 export const vicePrincipal = {
   name: 'Parshuram Guragain',
   position: 'Vice Principal',
-  image: 'public/images/viceprincipal.jpg',
-  message: `As the Vice Principal, I am honored to be part of an institution that prioritizes both academic excellence and personal growth. Our approach to education goes beyond textbooks – we focus on developing critical thinking, creativity, and compassion in our students.
+  image: '/images/viceprincipal.jpg',
+  message: `The Rising English Boarding School (TREBS) has gron rapidly since its commencement in 2048 B.S. It has since then made tremendous progress in achieving excellence in different fields - scholastic and co-scholastic. This height could not have been achieved withoud the team of dedicated and devoted staff who are committed to the service. I opine that education cleanses ignorance and spreads the light of knowledge and wisdom.
 
-We maintain a supportive learning environment where students feel encouraged to explore, question, and innovate. Our comprehensive curriculum, combined with modern teaching methodologies, ensures that every child receives the best possible education.
-
-I invite parents to partner with us in this beautiful journey of education. Together, we can help your children achieve their dreams and become the leaders of tomorrow.`,
+Value based quality education is the identity of this school. We provide a comprehensive style of education with the goal of catering to the needs of the children in doday's advancing and competitive society. Our ambition is to transform the community with the light of education and growing our students to become responsible and capable individuals in a stimulating environment that encourages a love for learning and developing a student's heightst potential. It is rightly said that young minds are the prospective architect of nation's destiny. Therefor, we always stand committed to the holistic development of each and every individual.`,
 };
 
 export const classes = [

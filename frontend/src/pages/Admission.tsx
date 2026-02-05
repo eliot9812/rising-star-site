@@ -24,13 +24,40 @@ const Admission = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    toast({
-      title: 'Application Submitted!',
-      description: 'We have received your admission inquiry. Our team will contact you soon.',
-    });
-    setFormData({ name: '', phone: '', email: '', address: '', classApplying: '', message: '' });
-    setIsSubmitting(false);
+
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/admissions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        toast({
+          title: 'Application Submitted!',
+          description: 'We have received your admission inquiry. Our team will contact you soon.',
+        });
+        setFormData({ name: '', phone: '', email: '', address: '', classApplying: '', message: '' });
+      } else {
+        toast({
+          title: 'Error',
+          description: data.message || 'Failed to submit application. Please try again.',
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to submit application. Please try again later.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const admissionSteps = [
@@ -52,8 +79,8 @@ const Admission = () => {
 
   return (
     <div className="min-h-screen">
-      <PageHero 
-        title="Admissions" 
+      <PageHero
+        title="Admissions"
         subtitle={`Join the ${schoolInfo.shortName} family and embark on a journey of excellence`}
         breadcrumbs={[{ label: 'Admissions' }]}
       />
@@ -213,10 +240,10 @@ const Admission = () => {
                 />
               </div>
 
-              <Button 
-                type="submit" 
-                variant="maroon" 
-                size="lg" 
+              <Button
+                type="submit"
+                variant="maroon"
+                size="lg"
                 className="w-full mt-8"
                 disabled={isSubmitting}
               >

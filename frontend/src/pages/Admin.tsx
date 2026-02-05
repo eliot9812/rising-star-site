@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  GraduationCap, Bell, Image, Mail, LogOut, Plus, Trash2, Edit2, 
-  Eye, EyeOff, Menu, X, Home, Check, FileText, Upload, UserPlus
+import {
+  GraduationCap, Bell, Image, Mail, LogOut, Plus, Trash2, Edit2,
+  Eye, EyeOff, Menu, X, Home, Check, FileText, Upload, UserPlus, Loader2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
-import { notices as initialNotices, galleryEvents as initialGalleryEvents, contactMessages as initialMessages, admissionForms as initialAdmissions, Notice, GalleryEvent, GalleryEventPhoto, ContactMessage, AdmissionForm, NoticeAttachmentData } from '@/data/mockData';
+import { Notice, GalleryEvent, GalleryEventPhoto, ContactMessage, AdmissionForm, NoticeAttachmentData } from '@/data/mockData';
 import NoticeAttachment from '@/components/shared/NoticeAttachment';
 import MultiFileUploader, { FileWithPreview } from '@/components/admin/MultiFileUploader';
 import {
@@ -26,6 +26,9 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import { Link } from 'lucide-react';
+
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 type AdminTab = 'notices' | 'gallery' | 'messages' | 'admissions';
 
@@ -38,10 +41,92 @@ const Admin = () => {
   const [loginData, setLoginData] = useState({ username: '', password: '' });
 
   // State for managing data
-  const [notices, setNotices] = useState<Notice[]>(initialNotices);
-  const [galleryEvents, setGalleryEvents] = useState<GalleryEvent[]>(initialGalleryEvents);
-  const [messages, setMessages] = useState<ContactMessage[]>(initialMessages);
-  const [admissions, setAdmissions] = useState<AdmissionForm[]>(initialAdmissions);
+  const [notices, setNotices] = useState<Notice[]>([]);
+  const [galleryEvents, setGalleryEvents] = useState<GalleryEvent[]>([]);
+  const [messages, setMessages] = useState<ContactMessage[]>([]);
+  const [admissions, setAdmissions] = useState<AdmissionForm[]>([]);
+  const [isLoadingMessages, setIsLoadingMessages] = useState(false);
+  const [isLoadingAdmissions, setIsLoadingAdmissions] = useState(false);
+  const [isLoadingNotices, setIsLoadingNotices] = useState(false);
+  const [isLoadingGallery, setIsLoadingGallery] = useState(false);
+
+  // Fetch messages from API
+  const fetchMessages = useCallback(async () => {
+    setIsLoadingMessages(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/contact`);
+      const data = await response.json();
+      if (data.success) {
+        setMessages(data.data);
+      }
+    } catch (error) {
+      console.error('Error fetching messages:', error);
+      toast({ title: 'Error', description: 'Failed to load messages', variant: 'destructive' });
+    } finally {
+      setIsLoadingMessages(false);
+    }
+  }, [toast]);
+
+  // Fetch admissions from API
+  const fetchAdmissions = useCallback(async () => {
+    setIsLoadingAdmissions(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/admissions`);
+      const data = await response.json();
+      if (data.success) {
+        setAdmissions(data.data);
+      }
+    } catch (error) {
+      console.error('Error fetching admissions:', error);
+      toast({ title: 'Error', description: 'Failed to load admissions', variant: 'destructive' });
+    } finally {
+      setIsLoadingAdmissions(false);
+    }
+  }, [toast]);
+
+  // Fetch notices from API
+  const fetchNotices = useCallback(async () => {
+    setIsLoadingNotices(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/notices`);
+      const data = await response.json();
+      if (data.success) {
+        setNotices(data.data);
+      }
+    } catch (error) {
+      console.error('Error fetching notices:', error);
+      toast({ title: 'Error', description: 'Failed to load notices', variant: 'destructive' });
+    } finally {
+      setIsLoadingNotices(false);
+    }
+  }, [toast]);
+
+  // Fetch gallery events from API
+  const fetchGallery = useCallback(async () => {
+    setIsLoadingGallery(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/gallery`);
+      const data = await response.json();
+      if (data.success) {
+        setGalleryEvents(data.data);
+      }
+    } catch (error) {
+      console.error('Error fetching gallery:', error);
+      toast({ title: 'Error', description: 'Failed to load gallery', variant: 'destructive' });
+    } finally {
+      setIsLoadingGallery(false);
+    }
+  }, [toast]);
+
+  // Fetch data when authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchMessages();
+      fetchAdmissions();
+      fetchNotices();
+      fetchGallery();
+    }
+  }, [isAuthenticated, fetchMessages, fetchAdmissions, fetchNotices, fetchGallery]);
 
   // Form visibility states
   const [showAddNoticeForm, setShowAddNoticeForm] = useState(false);
@@ -49,21 +134,21 @@ const Admin = () => {
 
   // Edit states
   const [editingNotice, setEditingNotice] = useState<Notice | null>(null);
-  const [newNotice, setNewNotice] = useState({ 
-    title: '', 
-    description: '', 
-    fullContent: '', 
-    isNew: true 
+  const [newNotice, setNewNotice] = useState({
+    title: '',
+    description: '',
+    fullContent: '',
+    isNew: true
   });
-  
+
   // Multiple notice attachments (images and PDFs)
   // TODO: Backend Integration - Replace Object URLs with actual upload API
   const [noticeAttachments, setNoticeAttachments] = useState<FileWithPreview[]>([]);
-  
+
   // For editing - track existing attachments to remove
   const [editingNoticeAttachments, setEditingNoticeAttachments] = useState<NoticeAttachmentData[]>([]);
   const [newEditAttachments, setNewEditAttachments] = useState<FileWithPreview[]>([]);
-  
+
   // Gallery event state with multi-file upload support
   // TODO: Backend Integration - Replace Object URLs with actual upload API
   const [newEvent, setNewEvent] = useState({ eventName: '', description: '' });
@@ -76,7 +161,7 @@ const Admin = () => {
 
   // Message modal state
   const [viewingMessage, setViewingMessage] = useState<ContactMessage | null>(null);
-  
+
   // Admission modal state
   const [viewingAdmission, setViewingAdmission] = useState<AdmissionForm | null>(null);
 
@@ -134,33 +219,43 @@ const Admin = () => {
   };
 
   // Notice Management
-  const addNotice = () => {
+  const addNotice = async () => {
     if (!newNotice.title.trim()) return;
-    
-    // Convert FileWithPreview to NoticeAttachmentData
-    // TODO: Backend Integration - Upload files to storage and get permanent URLs
-    const attachments: NoticeAttachmentData[] = noticeAttachments.map(f => ({
-      id: f.id,
-      url: f.preview, // In production, replace with uploaded file URL
-      type: f.type,
-      name: f.name
-    }));
-    
-    const notice: Notice = {
-      id: Date.now().toString(),
-      title: newNotice.title,
-      description: newNotice.description || newNotice.title,
-      fullContent: newNotice.fullContent || newNotice.description || newNotice.title,
-      date: new Date().toISOString().split('T')[0],
-      // Multiple attachments support
-      attachments: attachments.length > 0 ? attachments : undefined,
-      isNew: newNotice.isNew,
-    };
-    setNotices([notice, ...notices]);
-    setNewNotice({ title: '', description: '', fullContent: '', isNew: true });
-    setNoticeAttachments([]); // Don't revoke URLs since they're now used in the notice
-    setShowAddNoticeForm(false);
-    toast({ title: 'Notice Added', description: 'New notice has been published.' });
+
+    try {
+      // Use FormData to upload files
+      const formData = new FormData();
+      formData.append('title', newNotice.title);
+      formData.append('description', newNotice.description || newNotice.title);
+      formData.append('fullContent', newNotice.fullContent || newNotice.description || newNotice.title);
+      formData.append('date', new Date().toISOString().split('T')[0]);
+      formData.append('isNew', String(newNotice.isNew));
+
+      // Append files
+      noticeAttachments.forEach(f => {
+        if (f.file) {
+          formData.append('files', f.file);
+        }
+      });
+
+      const response = await fetch(`${API_BASE_URL}/notices`, {
+        method: 'POST',
+        body: formData, // No Content-Type header - browser sets it with boundary
+      });
+      const data = await response.json();
+      if (data.success) {
+        setNotices([data.data, ...notices]);
+        setNewNotice({ title: '', description: '', fullContent: '', isNew: true });
+        clearNoticeAttachments();
+        setShowAddNoticeForm(false);
+        toast({ title: 'Notice Added', description: 'New notice has been published.' });
+      } else {
+        toast({ title: 'Error', description: data.message || 'Failed to add notice', variant: 'destructive' });
+      }
+    } catch (error) {
+      console.error('Error adding notice:', error);
+      toast({ title: 'Error', description: 'Failed to add notice', variant: 'destructive' });
+    }
   };
 
   // Start editing a notice
@@ -170,34 +265,64 @@ const Admin = () => {
     setNewEditAttachments([]);
   };
 
-  const updateNotice = () => {
+  const updateNotice = async () => {
     if (!editingNotice) return;
-    
-    // Combine existing attachments with new ones
-    // TODO: Backend Integration - Upload new files and get permanent URLs
-    const newAttachments: NoticeAttachmentData[] = newEditAttachments.map(f => ({
-      id: f.id,
-      url: f.preview,
-      type: f.type,
-      name: f.name
-    }));
-    
-    const updatedNotice: Notice = {
-      ...editingNotice,
-      attachments: [...editingNoticeAttachments, ...newAttachments].length > 0 
-        ? [...editingNoticeAttachments, ...newAttachments] 
-        : undefined
-    };
-    
-    setNotices(notices.map(n => n.id === editingNotice.id ? updatedNotice : n));
-    setEditingNotice(null);
-    clearEditAttachments();
-    toast({ title: 'Notice Updated', description: 'Notice has been updated successfully.' });
+
+    try {
+      // Use FormData to upload files
+      const formData = new FormData();
+      formData.append('title', editingNotice.title);
+      formData.append('description', editingNotice.description);
+      formData.append('fullContent', editingNotice.fullContent);
+      formData.append('date', editingNotice.date);
+      formData.append('isNew', String(editingNotice.isNew));
+
+      // IDs of existing attachments to keep
+      const keepIds = editingNoticeAttachments.map(a => a.id);
+      formData.append('keepAttachmentIds', JSON.stringify(keepIds));
+
+      // Append new files
+      newEditAttachments.forEach(f => {
+        if (f.file) {
+          formData.append('files', f.file);
+        }
+      });
+
+      const response = await fetch(`${API_BASE_URL}/notices/${editingNotice.id}`, {
+        method: 'PUT',
+        body: formData,
+      });
+      const data = await response.json();
+      if (data.success) {
+        setNotices(notices.map(n => n.id === editingNotice.id ? data.data : n));
+        setEditingNotice(null);
+        clearEditAttachments();
+        toast({ title: 'Notice Updated', description: 'Notice has been updated successfully.' });
+      } else {
+        toast({ title: 'Error', description: data.message || 'Failed to update notice', variant: 'destructive' });
+      }
+    } catch (error) {
+      console.error('Error updating notice:', error);
+      toast({ title: 'Error', description: 'Failed to update notice', variant: 'destructive' });
+    }
   };
 
-  const deleteNotice = (id: string) => {
-    setNotices(notices.filter(n => n.id !== id));
-    toast({ title: 'Notice Deleted', description: 'Notice has been removed.' });
+  const deleteNotice = async (id: string) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/notices/${id}`, {
+        method: 'DELETE',
+      });
+      const data = await response.json();
+      if (data.success) {
+        setNotices(notices.filter(n => n.id !== id));
+        toast({ title: 'Notice Deleted', description: 'Notice has been removed.' });
+      } else {
+        toast({ title: 'Error', description: data.message || 'Failed to delete notice', variant: 'destructive' });
+      }
+    } catch (error) {
+      console.error('Error deleting notice:', error);
+      toast({ title: 'Error', description: 'Failed to delete notice', variant: 'destructive' });
+    }
   };
 
   // Gallery Event Management - Multi-file upload with Object URLs for frontend-only operation
@@ -232,7 +357,7 @@ const Admin = () => {
     setShowAddEventForm(false);
   };
 
-  const addEvent = () => {
+  const addEvent = async () => {
     if (!newEvent.eventName.trim()) {
       toast({ title: 'Error', description: 'Please enter an event name.', variant: 'destructive' });
       return;
@@ -242,31 +367,42 @@ const Admin = () => {
       return;
     }
 
-    // TODO: Backend Integration - Upload files to server/storage and get permanent URLs
-    // Currently using Object URLs which work for current session only
-    const photos: GalleryEventPhoto[] = eventPhotos.map((file, index) => ({
-      id: `${Date.now()}-${index}`,
-      src: file.preview,
-      alt: file.alt || `Photo ${index + 1}`,
-    }));
+    try {
+      const formData = new FormData();
+      formData.append('eventName', newEvent.eventName);
+      formData.append('description', newEvent.description || newEvent.eventName);
+      formData.append('date', new Date().toISOString().split('T')[0]);
 
-    const newGalleryEvent: GalleryEvent = {
-      id: Date.now().toString(),
-      eventName: newEvent.eventName,
-      description: newEvent.description || newEvent.eventName,
-      coverPhoto: photos[0].src, // First photo as cover
-      photos,
-      date: new Date().toISOString().split('T')[0],
-    };
+      // Append photos
+      eventPhotos.forEach(photo => {
+        if (photo.file) {
+          formData.append('photos', photo.file);
+        }
+      });
 
-    setGalleryEvents([newGalleryEvent, ...galleryEvents]);
-    setNewEvent({ eventName: '', description: '' });
-    setEventPhotos([]);
-    setShowAddEventForm(false);
-    toast({
-      title: 'Event Added',
-      description: `Event "${newGalleryEvent.eventName}" added with ${photos.length} photo(s).`
-    });
+      const response = await fetch(`${API_BASE_URL}/gallery`, {
+        method: 'POST',
+        body: formData,
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        setGalleryEvents([data.data, ...galleryEvents]);
+        setNewEvent({ eventName: '', description: '' });
+        eventPhotos.forEach(f => URL.revokeObjectURL(f.preview));
+        setEventPhotos([]);
+        setShowAddEventForm(false);
+        toast({
+          title: 'Event Added',
+          description: `Event "${data.data.eventName}" added with ${data.data.photos.length} photo(s).`
+        });
+      } else {
+        toast({ title: 'Error', description: data.message || 'Failed to add event', variant: 'destructive' });
+      }
+    } catch (error) {
+      console.error('Error adding event:', error);
+      toast({ title: 'Error', description: 'Failed to add event', variant: 'destructive' });
+    }
   };
 
   // Start editing an event
@@ -306,63 +442,140 @@ const Admin = () => {
     setEditingEvent(null);
   };
 
-  const updateEvent = () => {
+  const updateEvent = async () => {
     if (!editingEvent) return;
 
-    // Combine existing photos with new ones
-    const newPhotos: GalleryEventPhoto[] = newEditEventPhotos.map((f, index) => ({
-      id: `${Date.now()}-new-${index}`,
-      src: f.preview,
-      alt: f.alt || `Photo ${index + 1}`,
-    }));
-
-    const allPhotos = [...editEventPhotos, ...newPhotos];
-
-    if (allPhotos.length === 0) {
+    const totalPhotos = editEventPhotos.length + newEditEventPhotos.length;
+    if (totalPhotos === 0) {
       toast({ title: 'Error', description: 'Event must have at least one photo.', variant: 'destructive' });
       return;
     }
 
-    const updatedEvent: GalleryEvent = {
-      ...editingEvent,
-      coverPhoto: allPhotos[0].src,
-      photos: allPhotos,
-    };
+    try {
+      const formData = new FormData();
+      formData.append('eventName', editingEvent.eventName);
+      formData.append('description', editingEvent.description);
+      formData.append('date', editingEvent.date);
 
-    setGalleryEvents(galleryEvents.map(e => e.id === editingEvent.id ? updatedEvent : e));
-    clearEditEventForm();
-    toast({ title: 'Event Updated', description: 'Event has been updated successfully.' });
+      // IDs of existing photos to keep
+      const keepIds = editEventPhotos.map(p => p.id);
+      formData.append('keepPhotoIds', JSON.stringify(keepIds));
+
+      // Append new photos
+      newEditEventPhotos.forEach(photo => {
+        if (photo.file) {
+          formData.append('photos', photo.file);
+        }
+      });
+
+      const response = await fetch(`${API_BASE_URL}/gallery/${editingEvent.id}`, {
+        method: 'PUT',
+        body: formData,
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        setGalleryEvents(galleryEvents.map(e => e.id === editingEvent.id ? data.data : e));
+        clearEditEventForm();
+        toast({ title: 'Event Updated', description: 'Event has been updated successfully.' });
+      } else {
+        toast({ title: 'Error', description: data.message || 'Failed to update event', variant: 'destructive' });
+      }
+    } catch (error) {
+      console.error('Error updating event:', error);
+      toast({ title: 'Error', description: 'Failed to update event', variant: 'destructive' });
+    }
   };
 
-  const deleteEvent = (id: string) => {
-    setGalleryEvents(galleryEvents.filter(e => e.id !== id));
-    toast({ title: 'Event Deleted', description: 'Event has been removed from gallery.' });
+  const deleteEvent = async (id: string) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/gallery/${id}`, {
+        method: 'DELETE',
+      });
+      const data = await response.json();
+      if (data.success) {
+        setGalleryEvents(galleryEvents.filter(e => e.id !== id));
+        toast({ title: 'Event Deleted', description: 'Event has been removed from gallery.' });
+      } else {
+        toast({ title: 'Error', description: data.message || 'Failed to delete event', variant: 'destructive' });
+      }
+    } catch (error) {
+      console.error('Error deleting event:', error);
+      toast({ title: 'Error', description: 'Failed to delete event', variant: 'destructive' });
+    }
   };
 
   // Message Management
-  const toggleMessageRead = (id: string) => {
-    setMessages(messages.map(m => m.id === id ? { ...m, isRead: !m.isRead } : m));
+  const toggleMessageRead = async (id: string) => {
+    const message = messages.find(m => m.id === id);
+    if (!message) return;
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/contact/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isRead: !message.isRead }),
+      });
+      const data = await response.json();
+      if (data.success) {
+        setMessages(messages.map(m => m.id === id ? { ...m, isRead: !m.isRead } : m));
+      }
+    } catch (error) {
+      toast({ title: 'Error', description: 'Failed to update message', variant: 'destructive' });
+    }
   };
 
-  const deleteMessage = (id: string) => {
-    setMessages(messages.filter(m => m.id !== id));
-    setViewingMessage(null);
-    toast({ title: 'Message Deleted', description: 'Message has been removed.' });
+  const deleteMessage = async (id: string) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/contact/${id}`, {
+        method: 'DELETE',
+      });
+      const data = await response.json();
+      if (data.success) {
+        setMessages(messages.filter(m => m.id !== id));
+        setViewingMessage(null);
+        toast({ title: 'Message Deleted', description: 'Message has been removed.' });
+      }
+    } catch (error) {
+      toast({ title: 'Error', description: 'Failed to delete message', variant: 'destructive' });
+    }
   };
 
   // Admission Management
-  const updateAdmissionStatus = (id: string, status: AdmissionForm['status']) => {
-    setAdmissions(admissions.map(a => a.id === id ? { ...a, status } : a));
-    if (viewingAdmission?.id === id) {
-      setViewingAdmission({ ...viewingAdmission, status });
+  const updateAdmissionStatus = async (id: string, status: AdmissionForm['status']) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/admissions/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status }),
+      });
+      const data = await response.json();
+      if (data.success) {
+        setAdmissions(admissions.map(a => a.id === id ? { ...a, status } : a));
+        if (viewingAdmission?.id === id) {
+          setViewingAdmission({ ...viewingAdmission, status });
+        }
+        toast({ title: 'Status Updated', description: `Admission status updated to ${status}.` });
+      }
+    } catch (error) {
+      toast({ title: 'Error', description: 'Failed to update admission status', variant: 'destructive' });
     }
-    toast({ title: 'Status Updated', description: `Admission status updated to ${status}.` });
   };
 
-  const deleteAdmission = (id: string) => {
-    setAdmissions(admissions.filter(a => a.id !== id));
-    setViewingAdmission(null);
-    toast({ title: 'Admission Deleted', description: 'Admission record has been removed.' });
+  const deleteAdmission = async (id: string) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/admissions/${id}`, {
+        method: 'DELETE',
+      });
+      const data = await response.json();
+      if (data.success) {
+        setAdmissions(admissions.filter(a => a.id !== id));
+        setViewingAdmission(null);
+        toast({ title: 'Admission Deleted', description: 'Admission record has been removed.' });
+      }
+    } catch (error) {
+      toast({ title: 'Error', description: 'Failed to delete admission', variant: 'destructive' });
+    }
   };
 
   // Login Screen
@@ -407,9 +620,10 @@ const Admin = () => {
             <Button type="submit" className="w-full mt-6 h-12 text-base font-semibold">
               Login to Dashboard
             </Button>
-            <p className="text-center text-sm text-muted-foreground mt-4">
-              Press <kbd className="px-2 py-1 bg-muted rounded text-xs font-mono">Esc</kbd> to go back to website
-            </p>
+            <div className="text-center">
+              <a href="/" className="text-center text-sm text-muted-foreground mt-4">Go To Home Page</a>
+            </div>
+
           </form>
         </div>
       </div>
@@ -420,10 +634,10 @@ const Admin = () => {
     <div className="min-h-screen bg-background flex">
       {/* Sidebar */}
       <aside className={cn(
-        'fixed lg:static inset-y-0 left-0 z-50 w-64 bg-card border-r border-border transition-transform duration-300',
+        'fixed inset-y-0 left-0 z-50 w-64 bg-card border-r border-border transition-transform duration-300 h-screen overflow-y-auto',
         isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0 lg:w-20'
       )}>
-        <div className="flex flex-col h-full">
+        <div className="flex flex-col h-full sticky top-0">
           {/* Header */}
           <div className="p-4 border-b border-border">
             <div className="flex items-center gap-3">
@@ -493,7 +707,10 @@ const Admin = () => {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 min-h-screen">
+      <main className={cn(
+        'flex-1 min-h-screen transition-all duration-300',
+        isSidebarOpen ? 'lg:ml-64' : 'lg:ml-20'
+      )}>
         {/* Top Bar */}
         <header className="sticky top-0 z-40 bg-card/95 backdrop-blur-sm border-b border-border">
           <div className="flex items-center justify-between px-6 py-4">
@@ -575,14 +792,14 @@ const Admin = () => {
                         rows={6}
                       />
                     </div>
-                    
+
                     {/* Multi-File Upload for Images and PDFs */}
                     <MultiFileUploader
                       files={noticeAttachments}
                       onChange={setNoticeAttachments}
                       label="Attachments (Multiple Images & PDFs)"
                     />
-                    
+
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                       <label className="flex items-center gap-2 text-sm">
                         <input
@@ -631,7 +848,7 @@ const Admin = () => {
                         onChange={(e) => setEditingNotice({ ...editingNotice, title: e.target.value })}
                       />
                     </div>
-                    
+
                     {/* Description */}
                     <div>
                       <Label className="block mb-2">Short Description</Label>
@@ -640,7 +857,7 @@ const Admin = () => {
                         onChange={(e) => setEditingNotice({ ...editingNotice, description: e.target.value })}
                       />
                     </div>
-                    
+
                     {/* Full Content - Larger textarea for full view */}
                     <div>
                       <Label className="block mb-2">Full Content</Label>
@@ -651,7 +868,7 @@ const Admin = () => {
                         className="min-h-[200px]"
                       />
                     </div>
-                    
+
                     {/* Multi-File Upload for Attachments */}
                     <MultiFileUploader
                       files={newEditAttachments}
@@ -660,7 +877,7 @@ const Admin = () => {
                       onRemoveExisting={removeExistingAttachment}
                       label="Attachments (Images & PDFs)"
                     />
-                    
+
                     {/* Mark as New */}
                     <div>
                       <label className="flex items-center gap-2 text-sm">
@@ -673,7 +890,7 @@ const Admin = () => {
                         Mark as New
                       </label>
                     </div>
-                    
+
                     {/* Action Buttons */}
                     <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-border">
                       <Button onClick={updateNotice} className="flex-1 sm:flex-none">
@@ -696,29 +913,41 @@ const Admin = () => {
                   <h3 className="font-semibold text-foreground">All Notices ({notices.length})</h3>
                 </div>
                 <div className="divide-y divide-border">
-                  {notices.map((notice) => (
-                    <div key={notice.id} className="p-4 flex items-center justify-between gap-4">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          {notice.isNew && (
-                            <span className="px-2 py-0.5 bg-school-gold text-school-dark text-xs font-bold rounded">
-                              NEW
-                            </span>
-                          )}
-                          <p className="text-foreground truncate">{notice.title}</p>
-                        </div>
-                        <p className="text-sm text-muted-foreground mt-1">{notice.date}</p>
-                      </div>
-                      <div className="flex gap-2">
-                        <Button variant="ghost" size="icon" onClick={() => startEditingNotice(notice)}>
-                          <Edit2 className="w-4 h-4" />
-                        </Button>
-                        <Button variant="ghost" size="icon" className="text-destructive" onClick={() => deleteNotice(notice.id)}>
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
+                  {isLoadingNotices ? (
+                    <div className="p-8 text-center">
+                      <Loader2 className="w-8 h-8 mx-auto text-primary animate-spin" />
+                      <p className="text-muted-foreground mt-2">Loading notices...</p>
                     </div>
-                  ))}
+                  ) : notices.length === 0 ? (
+                    <div className="p-8 text-center">
+                      <Bell className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+                      <p className="text-muted-foreground">No notices yet. Add your first notice!</p>
+                    </div>
+                  ) : (
+                    notices.map((notice) => (
+                      <div key={notice.id} className="p-4 flex items-center justify-between gap-4">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            {notice.isNew && (
+                              <span className="px-2 py-0.5 bg-school-gold text-school-dark text-xs font-bold rounded">
+                                NEW
+                              </span>
+                            )}
+                            <p className="text-foreground truncate">{notice.title}</p>
+                          </div>
+                          <p className="text-sm text-muted-foreground mt-1">{notice.date}</p>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button variant="ghost" size="icon" onClick={() => startEditingNotice(notice)}>
+                            <Edit2 className="w-4 h-4" />
+                          </Button>
+                          <Button variant="ghost" size="icon" className="text-destructive" onClick={() => deleteNotice(notice.id)}>
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))
+                  )}
                 </div>
               </div>
             </div>
@@ -883,7 +1112,7 @@ const Admin = () => {
                             <div key={photo.id} className="relative group">
                               <div className={`aspect-square rounded-lg overflow-hidden border-2 ${index === 0 ? 'border-primary' : 'border-border'}`}>
                                 <img
-                                  src={photo.src}
+                                  src={photo.src?.startsWith('/uploads') ? `http://localhost:5000${photo.src}` : photo.src}
                                   alt={photo.alt}
                                   className="w-full h-full object-cover"
                                 />
@@ -977,43 +1206,49 @@ const Admin = () => {
                   <h3 className="font-semibold text-foreground">All Events ({galleryEvents.length})</h3>
                 </div>
                 <div className="divide-y divide-border">
-                  {galleryEvents.map((event) => (
-                    <div key={event.id} className="p-4 flex items-center gap-4">
-                      {/* Cover Photo Thumbnail */}
-                      <div className="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0">
-                        <img
-                          src={event.coverPhoto}
-                          alt={event.eventName}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-
-                      {/* Event Info */}
-                      <div className="flex-1 min-w-0">
-                        <h4 className="font-semibold text-foreground truncate">{event.eventName}</h4>
-                        <p className="text-sm text-muted-foreground truncate">{event.description}</p>
-                        <div className="flex items-center gap-4 mt-1 text-xs text-muted-foreground">
-                          <span>{event.date}</span>
-                          <span>{event.photos.length} photo(s)</span>
-                        </div>
-                      </div>
-
-                      {/* Actions */}
-                      <div className="flex gap-2 flex-shrink-0">
-                        <Button variant="ghost" size="icon" onClick={() => startEditingEvent(event)}>
-                          <Edit2 className="w-4 h-4" />
-                        </Button>
-                        <Button variant="ghost" size="icon" className="text-destructive" onClick={() => deleteEvent(event.id)}>
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
+                  {isLoadingGallery ? (
+                    <div className="p-8 text-center">
+                      <Loader2 className="w-8 h-8 mx-auto text-primary animate-spin" />
+                      <p className="text-muted-foreground mt-2">Loading gallery events...</p>
                     </div>
-                  ))}
-                  {galleryEvents.length === 0 && (
+                  ) : galleryEvents.length === 0 ? (
                     <div className="p-12 text-center">
                       <Image className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
                       <p className="text-muted-foreground">No events added yet</p>
                     </div>
+                  ) : (
+                    galleryEvents.map((event) => (
+                      <div key={event.id} className="p-4 flex items-center gap-4">
+                        {/* Cover Photo Thumbnail */}
+                        <div className="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0">
+                          <img
+                            src={event.coverPhoto?.startsWith('/uploads') ? `http://localhost:5000${event.coverPhoto}` : event.coverPhoto}
+                            alt={event.eventName}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+
+                        {/* Event Info */}
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-semibold text-foreground truncate">{event.eventName}</h4>
+                          <p className="text-sm text-muted-foreground truncate">{event.description}</p>
+                          <div className="flex items-center gap-4 mt-1 text-xs text-muted-foreground">
+                            <span>{event.date}</span>
+                            <span>{event.photos.length} photo(s)</span>
+                          </div>
+                        </div>
+
+                        {/* Actions */}
+                        <div className="flex gap-2 flex-shrink-0">
+                          <Button variant="ghost" size="icon" onClick={() => startEditingEvent(event)}>
+                            <Edit2 className="w-4 h-4" />
+                          </Button>
+                          <Button variant="ghost" size="icon" className="text-destructive" onClick={() => deleteEvent(event.id)}>
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))
                   )}
                 </div>
               </div>
@@ -1027,7 +1262,7 @@ const Admin = () => {
               <div className="bg-card rounded-xl shadow-md overflow-hidden">
                 <div className="p-4 border-b border-border">
                   <h3 className="font-semibold text-foreground">
-                    Contact Messages ({messages.length}) 
+                    Contact Messages ({messages.length})
                     {messages.filter(m => !m.isRead).length > 0 && (
                       <span className="ml-2 text-sm font-normal text-muted-foreground">
                         ({messages.filter(m => !m.isRead).length} unread)
@@ -1064,7 +1299,7 @@ const Admin = () => {
                           <p className="text-sm text-foreground truncate mt-1">{message.message}</p>
                           <p className="text-xs text-muted-foreground mt-1">{message.date}</p>
                         </div>
-                        
+
                         {/* Action Buttons - Right aligned with icons and tooltips */}
                         <div className="flex gap-2 shrink-0">
                           <Tooltip>
@@ -1079,15 +1314,15 @@ const Admin = () => {
                             </TooltipTrigger>
                             <TooltipContent>View Message</TooltipContent>
                           </Tooltip>
-                          
+
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <Button
                                 size="icon"
                                 variant="outline"
                                 className={cn(
-                                  message.isRead 
-                                    ? 'border-muted-foreground text-muted-foreground hover:bg-muted' 
+                                  message.isRead
+                                    ? 'border-muted-foreground text-muted-foreground hover:bg-muted'
                                     : 'border-green-500 text-green-600 hover:bg-green-50 dark:hover:bg-green-950'
                                 )}
                                 onClick={() => toggleMessageRead(message.id)}
@@ -1099,7 +1334,7 @@ const Admin = () => {
                               {message.isRead ? 'Mark as Unread' : 'Mark as Read'}
                             </TooltipContent>
                           </Tooltip>
-                          
+
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <Button
@@ -1129,7 +1364,7 @@ const Admin = () => {
               <div className="bg-card rounded-xl shadow-md overflow-hidden">
                 <div className="p-4 border-b border-border">
                   <h3 className="font-semibold text-foreground">
-                    Admission Submissions ({admissions.length}) 
+                    Admission Submissions ({admissions.length})
                     {admissions.filter(a => a.status === 'pending').length > 0 && (
                       <span className="ml-2 text-sm font-normal text-muted-foreground">
                         ({admissions.filter(a => a.status === 'pending').length} pending)
@@ -1276,7 +1511,7 @@ const Admin = () => {
               Received on {viewingMessage?.date}
             </DialogDescription>
           </DialogHeader>
-          
+
           {viewingMessage && (
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4 text-sm">
@@ -1289,7 +1524,7 @@ const Admin = () => {
                   <p className="text-foreground font-medium">{viewingMessage.phone}</p>
                 </div>
               </div>
-              
+
               <div>
                 <p className="text-muted-foreground mb-2 text-sm">Message</p>
                 <div className="bg-muted/50 rounded-lg p-4">
@@ -1343,7 +1578,7 @@ const Admin = () => {
               Submitted on {viewingAdmission?.date}
             </DialogDescription>
           </DialogHeader>
-          
+
           {viewingAdmission && (
             <div className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
@@ -1368,7 +1603,7 @@ const Admin = () => {
                   <p className="text-foreground font-medium">{viewingAdmission.address}</p>
                 </div>
               </div>
-              
+
               <div>
                 <p className="text-muted-foreground mb-2 text-sm">Message</p>
                 <div className="bg-muted/50 rounded-lg p-4">

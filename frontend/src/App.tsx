@@ -8,7 +8,7 @@ import Layout from "./components/layout/Layout";
 import ScrollToTop from "./components/shared/ScrollToTop";
 import Index from "./pages/Index";
 import About from "./pages/About";
-import Academics from "./pages/Academics";
+// import Academics from "./pages/Academics";
 import Admission from "./pages/Admission";
 import Gallery from "./pages/Gallery";
 import Contact from "./pages/Contact";

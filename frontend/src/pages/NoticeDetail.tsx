@@ -1,24 +1,74 @@
 import { useParams, Link } from 'react-router-dom';
-import { notices, NoticeAttachmentData } from '@/data/mockData';
+import { useState, useEffect } from 'react';
+import { Notice } from '@/data/mockData';
 import PageHero from '@/components/shared/PageHero';
 import NoticeAttachment from '@/components/shared/NoticeAttachment';
 import AttachmentsGallery from '@/components/shared/AttachmentsGallery';
-import { Calendar, ArrowLeft } from 'lucide-react';
+import { Calendar, ArrowLeft, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Helmet } from 'react-helmet-async';
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+
 const NoticeDetail = () => {
   const { id } = useParams<{ id: string }>();
-  
-  // Dynamic loading from data source - Backend ready with ID-based loading
-  const notice = notices.find(n => n.id === id);
+  const [notice, setNotice] = useState<Notice | null>(null);
+  const [otherNotices, setOtherNotices] = useState<Notice[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  if (!notice) {
+  useEffect(() => {
+    const fetchNotice = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+
+        // Fetch the specific notice
+        const response = await fetch(`${API_BASE_URL}/notices/${id}`);
+        const data = await response.json();
+
+        if (data.success) {
+          setNotice(data.data);
+        } else {
+          setError('Notice not found');
+        }
+
+        // Fetch all notices for "Other Notices" section
+        const allResponse = await fetch(`${API_BASE_URL}/notices`);
+        const allData = await allResponse.json();
+        if (allData.success) {
+          setOtherNotices(allData.data.filter((n: Notice) => n.id !== id).slice(0, 2));
+        }
+      } catch (err) {
+        console.error('Error fetching notice:', err);
+        setError('Failed to load notice');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (id) {
+      fetchNotice();
+    }
+  }, [id]);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-10 h-10 mx-auto text-primary animate-spin" />
+          <p className="text-muted-foreground mt-4">Loading notice...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !notice) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <h1 className="font-heading text-3xl font-bold text-foreground mb-4">Notice Not Found</h1>
-          <p className="text-muted-foreground mb-6">The notice you're looking for doesn't exist.</p>
+          <p className="text-muted-foreground mb-6">{error || "The notice you're looking for doesn't exist."}</p>
           <Link to="/notices">
             <Button>
               <ArrowLeft className="w-4 h-4 mr-2" />
@@ -43,7 +93,7 @@ const NoticeDetail = () => {
       </Helmet>
 
       <div>
-        <PageHero 
+        <PageHero
           title={notice.title}
           breadcrumbs={[
             { label: 'Notices', path: '/notices' },
@@ -56,8 +106,8 @@ const NoticeDetail = () => {
           <div className="container-school">
             <div className="max-w-3xl mx-auto">
               {/* Back Link */}
-              <Link 
-                to="/notices" 
+              <Link
+                to="/notices"
                 className="inline-flex items-center gap-2 text-primary hover:underline mb-8"
               >
                 <ArrowLeft className="w-4 h-4" />
@@ -107,7 +157,7 @@ const NoticeDetail = () => {
 
                 {/* Full Content */}
                 <div className="prose prose-lg max-w-none text-muted-foreground">
-                  {notice.fullContent.split('\n\n').map((paragraph, index) => (
+                  {notice.fullContent?.split('\n\n').map((paragraph, index) => (
                     <p key={index} className="mb-4 leading-relaxed">
                       {paragraph}
                     </p>
@@ -116,13 +166,11 @@ const NoticeDetail = () => {
               </article>
 
               {/* Navigation to other notices */}
-              <div className="mt-8 pt-8 border-t border-border">
-                <h3 className="font-heading text-lg font-semibold text-foreground mb-4">Other Notices</h3>
-                <div className="grid sm:grid-cols-2 gap-4">
-                  {notices
-                    .filter(n => n.id !== notice.id)
-                    .slice(0, 2)
-                    .map(n => (
+              {otherNotices.length > 0 && (
+                <div className="mt-8 pt-8 border-t border-border">
+                  <h3 className="font-heading text-lg font-semibold text-foreground mb-4">Other Notices</h3>
+                  <div className="grid sm:grid-cols-2 gap-4">
+                    {otherNotices.map(n => (
                       <Link
                         key={n.id}
                         to={`/notices/${n.id}`}
@@ -132,8 +180,9 @@ const NoticeDetail = () => {
                         <span className="text-sm text-muted-foreground mt-1 block">{n.date}</span>
                       </Link>
                     ))}
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
         </section>

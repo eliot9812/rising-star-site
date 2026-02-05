@@ -10,6 +10,17 @@ import {
   CarouselNext,
 } from '@/components/ui/carousel';
 
+const API_BASE_URL = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000';
+
+// Helper to get full URL for attachments
+const getFullUrl = (url: string) => {
+  if (!url) return '';
+  if (url.startsWith('/uploads')) {
+    return `${API_BASE_URL}${url}`;
+  }
+  return url;
+};
+
 interface AttachmentsGalleryProps {
   attachments: NoticeAttachmentData[];
   title: string;
@@ -33,7 +44,7 @@ const AttachmentsGallery = ({ attachments, title }: AttachmentsGalleryProps) => 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (!isImageModalOpen) return;
-      
+
       if (e.key === 'Escape') {
         setIsImageModalOpen(false);
       } else if (e.key === 'ArrowRight') {
@@ -67,7 +78,8 @@ const AttachmentsGallery = ({ attachments, title }: AttachmentsGalleryProps) => 
   // Single attachment - simplified view
   if (attachments.length === 1) {
     const attachment = attachments[0];
-    
+    const attachmentUrl = getFullUrl(attachment.url);
+
     if (attachment.type === 'pdf') {
       return (
         <div className="mb-8">
@@ -90,7 +102,7 @@ const AttachmentsGallery = ({ attachments, title }: AttachmentsGalleryProps) => 
                 <span className="hidden sm:inline">{showPdfEmbed === attachment.id ? 'Hide' : 'View'}</span>
               </Button>
               <Button variant="outline" size="sm" asChild className="gap-1">
-                <a href={attachment.url} download={attachment.name}>
+                <a href={attachmentUrl} download={attachment.name}>
                   <Download className="w-3 h-3" />
                   <span className="hidden sm:inline">Download</span>
                 </a>
@@ -100,7 +112,7 @@ const AttachmentsGallery = ({ attachments, title }: AttachmentsGalleryProps) => 
           {showPdfEmbed === attachment.id && (
             <div className="mt-4 rounded-lg overflow-hidden border border-border bg-muted">
               <iframe
-                src={`${attachment.url}#toolbar=1&navpanes=0`}
+                src={`${attachmentUrl}#toolbar=1&navpanes=0`}
                 className="w-full h-[70vh] min-h-[400px]"
                 title={attachment.name}
               />
@@ -113,7 +125,7 @@ const AttachmentsGallery = ({ attachments, title }: AttachmentsGalleryProps) => 
     // Single image
     return (
       <>
-        <div 
+        <div
           className="mb-8 rounded-xl overflow-hidden cursor-pointer group relative"
           onClick={() => openImageModal(attachment.id)}
           role="button"
@@ -121,8 +133,8 @@ const AttachmentsGallery = ({ attachments, title }: AttachmentsGalleryProps) => 
           onKeyDown={(e) => e.key === 'Enter' && openImageModal(attachment.id)}
           aria-label={`View ${title} in full screen`}
         >
-          <img 
-            src={attachment.url} 
+          <img
+            src={attachmentUrl}
             alt={title}
             className="w-full h-auto max-h-96 object-cover transition-transform duration-300 group-hover:scale-[1.02]"
             loading="lazy"
@@ -137,7 +149,7 @@ const AttachmentsGallery = ({ attachments, title }: AttachmentsGalleryProps) => 
 
         {/* Image Modal */}
         {isImageModalOpen && imageAttachments[modalImageIndex] && (
-          <div 
+          <div
             className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm animate-fade-in"
             onClick={() => setIsImageModalOpen(false)}
           >
@@ -150,7 +162,7 @@ const AttachmentsGallery = ({ attachments, title }: AttachmentsGalleryProps) => 
             </button>
             <div className="relative max-w-[95vw] max-h-[95vh] p-4" onClick={(e) => e.stopPropagation()}>
               <img
-                src={imageAttachments[modalImageIndex].url}
+                src={getFullUrl(imageAttachments[modalImageIndex].url)}
                 alt={title}
                 className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl"
               />
@@ -171,72 +183,75 @@ const AttachmentsGallery = ({ attachments, title }: AttachmentsGalleryProps) => 
         <div className="mb-2 flex items-center justify-between">
           <p className="text-sm text-muted-foreground">{attachments.length} attachments</p>
         </div>
-        
+
         <Carousel className="w-full">
           <CarouselContent>
-            {attachments.map((attachment, index) => (
-              <CarouselItem key={attachment.id}>
-                {attachment.type === 'pdf' ? (
-                  <div className="p-1">
-                    <div className="flex items-center gap-3 p-4 bg-muted rounded-lg border border-border">
-                      <div className="w-16 h-16 bg-destructive/10 rounded-lg flex items-center justify-center flex-shrink-0">
-                        <FileText className="w-8 h-8 text-destructive" />
+            {attachments.map((attachment, index) => {
+              const attachmentUrl = getFullUrl(attachment.url);
+              return (
+                <CarouselItem key={attachment.id}>
+                  {attachment.type === 'pdf' ? (
+                    <div className="p-1">
+                      <div className="flex items-center gap-3 p-4 bg-muted rounded-lg border border-border">
+                        <div className="w-16 h-16 bg-destructive/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                          <FileText className="w-8 h-8 text-destructive" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-foreground truncate">{attachment.name}</p>
+                          <p className="text-sm text-muted-foreground">PDF File</p>
+                        </div>
+                        <div className="flex flex-col sm:flex-row gap-2 flex-shrink-0">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setShowPdfEmbed(showPdfEmbed === attachment.id ? null : attachment.id)}
+                            className="gap-1"
+                          >
+                            <Eye className="w-3 h-3" />
+                            {showPdfEmbed === attachment.id ? 'Hide' : 'View'}
+                          </Button>
+                          <Button variant="outline" size="sm" asChild className="gap-1">
+                            <a href={attachmentUrl} download={attachment.name}>
+                              <Download className="w-3 h-3" />
+                              Download
+                            </a>
+                          </Button>
+                        </div>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-foreground truncate">{attachment.name}</p>
-                        <p className="text-sm text-muted-foreground">PDF File</p>
-                      </div>
-                      <div className="flex flex-col sm:flex-row gap-2 flex-shrink-0">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setShowPdfEmbed(showPdfEmbed === attachment.id ? null : attachment.id)}
-                          className="gap-1"
-                        >
-                          <Eye className="w-3 h-3" />
-                          {showPdfEmbed === attachment.id ? 'Hide' : 'View'}
-                        </Button>
-                        <Button variant="outline" size="sm" asChild className="gap-1">
-                          <a href={attachment.url} download={attachment.name}>
-                            <Download className="w-3 h-3" />
-                            Download
-                          </a>
-                        </Button>
+                      {showPdfEmbed === attachment.id && (
+                        <div className="mt-4 rounded-lg overflow-hidden border border-border bg-muted">
+                          <iframe
+                            src={`${attachmentUrl}#toolbar=1&navpanes=0`}
+                            className="w-full h-[60vh] min-h-[350px]"
+                            title={attachment.name}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div
+                      className="p-1 cursor-pointer group relative rounded-xl overflow-hidden"
+                      onClick={() => openImageModal(attachment.id)}
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={(e) => e.key === 'Enter' && openImageModal(attachment.id)}
+                    >
+                      <img
+                        src={attachmentUrl}
+                        alt={`${title} - ${index + 1}`}
+                        className="w-full h-64 sm:h-80 object-cover rounded-lg transition-transform duration-300 group-hover:scale-[1.02]"
+                        loading="lazy"
+                      />
+                      <div className="absolute inset-1 rounded-lg bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                        <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 rounded-full p-3 shadow-lg">
+                          <ZoomIn className="w-6 h-6 text-foreground" />
+                        </div>
                       </div>
                     </div>
-                    {showPdfEmbed === attachment.id && (
-                      <div className="mt-4 rounded-lg overflow-hidden border border-border bg-muted">
-                        <iframe
-                          src={`${attachment.url}#toolbar=1&navpanes=0`}
-                          className="w-full h-[60vh] min-h-[350px]"
-                          title={attachment.name}
-                        />
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <div 
-                    className="p-1 cursor-pointer group relative rounded-xl overflow-hidden"
-                    onClick={() => openImageModal(attachment.id)}
-                    role="button"
-                    tabIndex={0}
-                    onKeyDown={(e) => e.key === 'Enter' && openImageModal(attachment.id)}
-                  >
-                    <img 
-                      src={attachment.url} 
-                      alt={`${title} - ${index + 1}`}
-                      className="w-full h-64 sm:h-80 object-cover rounded-lg transition-transform duration-300 group-hover:scale-[1.02]"
-                      loading="lazy"
-                    />
-                    <div className="absolute inset-1 rounded-lg bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
-                      <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 rounded-full p-3 shadow-lg">
-                        <ZoomIn className="w-6 h-6 text-foreground" />
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </CarouselItem>
-            ))}
+                  )}
+                </CarouselItem>
+              );
+            })}
           </CarouselContent>
           <CarouselPrevious className="left-2" />
           <CarouselNext className="right-2" />
@@ -247,14 +262,13 @@ const AttachmentsGallery = ({ attachments, title }: AttachmentsGalleryProps) => 
           {attachments.map((_, index) => (
             <button
               key={index}
-              className={`w-2 h-2 rounded-full transition-colors ${
-                index === activeIndex ? 'bg-primary' : 'bg-muted-foreground/30'
-              }`}
+              className={`w-2 h-2 rounded-full transition-colors ${index === activeIndex ? 'bg-primary' : 'bg-muted-foreground/30'
+                }`}
               aria-label={`Go to slide ${index + 1}`}
             />
           ))}
         </div>
-        
+
         <p className="text-center text-muted-foreground text-xs mt-2">
           Swipe or use arrows to navigate • Click images to view full size
         </p>
@@ -262,7 +276,7 @@ const AttachmentsGallery = ({ attachments, title }: AttachmentsGalleryProps) => 
 
       {/* Full-screen image modal with navigation */}
       {isImageModalOpen && imageAttachments[modalImageIndex] && (
-        <div 
+        <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm animate-fade-in"
           onClick={() => setIsImageModalOpen(false)}
         >
@@ -302,12 +316,12 @@ const AttachmentsGallery = ({ attachments, title }: AttachmentsGalleryProps) => 
           )}
 
           {/* Image */}
-          <div 
+          <div
             className="relative max-w-[95vw] max-h-[95vh] p-4"
             onClick={(e) => e.stopPropagation()}
           >
             <img
-              src={imageAttachments[modalImageIndex].url}
+              src={getFullUrl(imageAttachments[modalImageIndex].url)}
               alt={`${title} - ${modalImageIndex + 1}`}
               className="max-w-full max-h-[85vh] object-contain rounded-lg shadow-2xl"
             />
