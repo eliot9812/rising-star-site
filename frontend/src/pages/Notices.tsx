@@ -4,7 +4,7 @@ import { Notice } from '@/data/mockData';
 import PageHero from '@/components/shared/PageHero';
 import NoticeAttachment from '@/components/shared/NoticeAttachment';
 import { Calendar, ArrowRight, Loader2 } from 'lucide-react';
-import { Helmet } from 'react-helmet-async';
+import SEO from '@/components/shared/SEO';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
@@ -62,10 +62,12 @@ const Notices = () => {
 
   return (
     <>
-      <Helmet>
-        <title>Notices | The Rising English Secondary Boarding School</title>
-        <meta name="description" content="Stay updated with the latest notices, announcements, and news from The Rising English Secondary Boarding School." />
-      </Helmet>
+      <SEO
+        title="Notices & Announcements | School in Sundarharaincha"
+        description="Latest notices, announcements, and news from The Rising English Boarding School, Sundarharaincha-10, Morang. Stay updated with exam schedules, events, and admissions."
+        keywords="school notices sundarharaincha, school announcements biratchowk, TRESBS news, school events morang"
+        url="https://therisingenglishschool.com/notices"
+      />
 
       <div className="min-h-screen">
         <PageHero

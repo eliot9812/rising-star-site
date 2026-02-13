@@ -1,12 +1,20 @@
 import { chairman, principal, vicePrincipal, schoolInfo } from '@/data/mockData';
-import { Target, Eye, Heart, Award } from 'lucide-react';
+import { Eye, Heart, Target, Award } from 'lucide-react';
 import PageHero from '@/components/shared/PageHero';
+import SEO from "@/components/shared/SEO";
 
 const About = () => {
   return (
-    <div>
-      <PageHero 
-        title="About Us" 
+    <div className="pt-20">
+      <SEO
+        title="About Us | Top School in Sundarharaincha & Biratchowk"
+        description="Learn about The Rising English Boarding School in Sundarharaincha-10, Morang. 33+ years of academic excellence near Biratchowk, serving students from Nursery to +2."
+        keywords="about rising english boarding school, school history sundarharaincha, best school biratchowk, top school morang, TRESBS about us"
+        url="https://therisingenglishschool.com/about"
+      />
+      {/* Hero Section */}
+      <PageHero
+        title="About Us"
         subtitle={`Learn about our journey, vision, and the dedicated team behind ${schoolInfo.shortName}`}
         breadcrumbs={[{ label: 'About Us' }]}
       />
@@ -18,10 +26,10 @@ const About = () => {
             <div>
               <span className="text-primary font-semibold text-sm uppercase tracking-wider">Our Story</span>
               <h2 className="font-heading text-3xl md:text-4xl font-bold text-foreground mt-2 mb-6">
-                A Legacy of Excellence Since {schoolInfo.established}
+                A Legacy of Excellence in Sundarharaincha Since {schoolInfo.established}
               </h2>
               <p className="text-muted-foreground leading-relaxed mb-4">
-                The Rising English Secondary Boarding School was founded with a vision to provide quality education that goes beyond textbooks. Over the years, we have grown from a small institution to one of the most respected schools in the region.
+                Located in Sundarharaincha-10, Morang, The Rising English Secondary Boarding School was founded with a vision to provide quality education that goes beyond textbooks. Over the years, we have grown from a small institution to one of the most respected schools in the Biratchowk and Sundarharaincha region.
               </p>
               <p className="text-muted-foreground leading-relaxed mb-4">
                 Our approach to education combines rigorous academics with character development, sports, and extracurricular activities. We believe that every child has unique potential, and our role is to help them discover and nurture it.
@@ -31,7 +39,7 @@ const About = () => {
               </p>
             </div>
             <div className="relative">
-              <img 
+              <img
                 src="/images/school4.jpg"
                 alt="School Campus"
                 className="rounded-xl shadow-school w-full"
@@ -68,7 +76,7 @@ const About = () => {
               </p>
             </div>
           </div>
-          
+
           {/* Core Values */}
           <div className="mt-12">
             <h3 className="font-heading text-2xl font-bold text-foreground text-center mb-8">Our Core Values</h3>

@@ -9,7 +9,7 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
 const getFullUrl = (url: string) => {
   if (!url) return '';
   if (url.startsWith('/uploads')) {
-    return `${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000'}${url}`;
+    return `${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}${url}`;
   }
   return url;
 };

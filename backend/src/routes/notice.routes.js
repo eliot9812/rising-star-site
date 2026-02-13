@@ -4,6 +4,7 @@ const path = require('path');
 const fs = require('fs');
 const { Notice, NoticeAttachment } = require('../models');
 const { upload, getFileType } = require('../utils/upload');
+const authMiddleware = require('../middleware/auth.middleware');
 
 // GET all notices
 router.get('/', async (req, res) => {
@@ -82,8 +83,8 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// POST create new notice with file uploads
-router.post('/', upload.array('files', 10), async (req, res) => {
+// POST create new notice with file uploads (admin only)
+router.post('/', authMiddleware, upload.array('files', 10), async (req, res) => {
   try {
     const { title, description, fullContent, date, isNew } = req.body;
 
@@ -137,8 +138,8 @@ router.post('/', upload.array('files', 10), async (req, res) => {
   }
 });
 
-// PUT update notice with file uploads
-router.put('/:id', upload.array('files', 10), async (req, res) => {
+// PUT update notice with file uploads (admin only)
+router.put('/:id', authMiddleware, upload.array('files', 10), async (req, res) => {
   try {
     const notice = await Notice.findByPk(req.params.id, {
       include: [{ model: NoticeAttachment, as: 'attachments' }]
@@ -170,13 +171,22 @@ router.put('/:id', upload.array('files', 10), async (req, res) => {
     }
 
     // Delete attachments that are not in keepAttachmentIds
+    const uploadsDir = path.join(__dirname, '..', '..', 'uploads');
     const existingAttachments = notice.attachments || [];
     for (const att of existingAttachments) {
       if (!idsToKeep.includes(att.id.toString())) {
         // Delete the file from disk
-        const filePath = path.join(__dirname, '..', '..', att.url);
-        if (fs.existsSync(filePath)) {
-          fs.unlinkSync(filePath);
+        if (att.url) {
+          const attFileName = path.basename(att.url);
+          const filePath = path.join(uploadsDir, 'notices', attFileName);
+          try {
+            if (fs.existsSync(filePath)) {
+              fs.unlinkSync(filePath);
+              console.log('Deleted removed attachment:', filePath);
+            }
+          } catch (fileErr) {
+            console.error('Failed to delete attachment file:', filePath, fileErr.message);
+          }
         }
         await att.destroy();
       }
@@ -220,8 +230,8 @@ router.put('/:id', upload.array('files', 10), async (req, res) => {
   }
 });
 
-// DELETE notice
-router.delete('/:id', async (req, res) => {
+// DELETE notice (admin only)
+router.delete('/:id', authMiddleware, async (req, res) => {
   try {
     const notice = await Notice.findByPk(req.params.id, {
       include: [{ model: NoticeAttachment, as: 'attachments' }]
@@ -231,12 +241,22 @@ router.delete('/:id', async (req, res) => {
       return res.status(404).json({ success: false, message: 'Notice not found' });
     }
 
+    const uploadsDir = path.join(__dirname, '..', '..', 'uploads');
+
     // Delete attachment files from disk
-    if (notice.attachments) {
+    if (notice.attachments && notice.attachments.length > 0) {
       for (const att of notice.attachments) {
-        const filePath = path.join(__dirname, '..', '..', att.url);
-        if (fs.existsSync(filePath)) {
-          fs.unlinkSync(filePath);
+        if (att.url) {
+          const attFileName = path.basename(att.url);
+          const filePath = path.join(uploadsDir, 'notices', attFileName);
+          try {
+            if (fs.existsSync(filePath)) {
+              fs.unlinkSync(filePath);
+              console.log('Deleted notice attachment:', filePath);
+            }
+          } catch (fileErr) {
+            console.error('Failed to delete attachment file:', filePath, fileErr.message);
+          }
         }
       }
     }
@@ -251,8 +271,8 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
-// POST upload files endpoint (for separate file upload)
-router.post('/upload', upload.array('files', 10), async (req, res) => {
+// POST upload files endpoint (admin only)
+router.post('/upload', authMiddleware, upload.array('files', 10), async (req, res) => {
   try {
     if (!req.files || req.files.length === 0) {
       return res.status(400).json({ success: false, message: 'No files uploaded' });

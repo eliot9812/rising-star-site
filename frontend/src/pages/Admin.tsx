@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   GraduationCap, Bell, Image, Mail, LogOut, Plus, Trash2, Edit2,
-  Eye, EyeOff, Menu, X, Home, Check, FileText, Upload, UserPlus, Loader2
+  Eye, EyeOff, Menu, X, Home, Check, FileText, Upload, UserPlus, Loader2, KeyRound
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -28,7 +28,7 @@ import {
 } from '@/components/ui/tooltip';
 import { Link } from 'lucide-react';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+import { API_BASE_URL, getUploadUrl } from '@/lib/api';
 
 type AdminTab = 'notices' | 'gallery' | 'messages' | 'admissions';
 
@@ -38,7 +38,15 @@ const Admin = () => {
   const [activeTab, setActiveTab] = useState<AdminTab>('notices');
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [loginError, setLoginError] = useState('');
   const [loginData, setLoginData] = useState({ username: '', password: '' });
+
+  // Get auth headers for API requests
+  const getAuthHeaders = useCallback(() => {
+    const token = localStorage.getItem('adminToken');
+    return token ? { 'Authorization': `Bearer ${token}` } : {};
+  }, []);
 
   // State for managing data
   const [notices, setNotices] = useState<Notice[]>([]);
@@ -50,11 +58,13 @@ const Admin = () => {
   const [isLoadingNotices, setIsLoadingNotices] = useState(false);
   const [isLoadingGallery, setIsLoadingGallery] = useState(false);
 
-  // Fetch messages from API
+  // Fetch messages from API (admin only)
   const fetchMessages = useCallback(async () => {
     setIsLoadingMessages(true);
     try {
-      const response = await fetch(`${API_BASE_URL}/contact`);
+      const response = await fetch(`${API_BASE_URL}/contact`, {
+        headers: getAuthHeaders(),
+      });
       const data = await response.json();
       if (data.success) {
         setMessages(data.data);
@@ -65,13 +75,15 @@ const Admin = () => {
     } finally {
       setIsLoadingMessages(false);
     }
-  }, [toast]);
+  }, [toast, getAuthHeaders]);
 
-  // Fetch admissions from API
+  // Fetch admissions from API (admin only)
   const fetchAdmissions = useCallback(async () => {
     setIsLoadingAdmissions(true);
     try {
-      const response = await fetch(`${API_BASE_URL}/admissions`);
+      const response = await fetch(`${API_BASE_URL}/admissions`, {
+        headers: getAuthHeaders(),
+      });
       const data = await response.json();
       if (data.success) {
         setAdmissions(data.data);
@@ -82,7 +94,7 @@ const Admin = () => {
     } finally {
       setIsLoadingAdmissions(false);
     }
-  }, [toast]);
+  }, [toast, getAuthHeaders]);
 
   // Fetch notices from API
   const fetchNotices = useCallback(async () => {
@@ -165,31 +177,115 @@ const Admin = () => {
   // Admission modal state
   const [viewingAdmission, setViewingAdmission] = useState<AdmissionForm | null>(null);
 
+  // Verify token on page load (auto-login if valid token exists)
+  useEffect(() => {
+    const verifyToken = async () => {
+      const token = localStorage.getItem('adminToken');
+      if (!token) return;
+
+      try {
+        const response = await fetch(`${API_BASE_URL}/auth/verify`, {
+          headers: { 'Authorization': `Bearer ${token}` },
+        });
+        const data = await response.json();
+        if (data.success) {
+          setIsAuthenticated(true);
+        } else {
+          localStorage.removeItem('adminToken');
+        }
+      } catch {
+        localStorage.removeItem('adminToken');
+      }
+    };
+    verifyToken();
+  }, []);
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Existing Escape key logic
       if (e.key === 'Escape') {
-        navigate('/login');
-      }
-
-      // New Logic: Ctrl + Alt + P to open login and fill credentials
-      if (e.ctrlKey && e.altKey && (e.key === 'p' || e.key === 'P')) {
-        e.preventDefault();
-        setIsAuthenticated(true); // Force logout/show login screen
-        setLoginData({ username: 'username', password: 'password' }); // Fill credentials
-        toast({ title: 'Developer Mode', description: 'Login credentials auto-filled.' });
+        navigate('/');
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [navigate, toast]);
+  }, [navigate]);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Placeholder authentication - Backend integration point
-    if (loginData.username && loginData.password) {
-      setIsAuthenticated(true);
-      toast({ title: 'Welcome!', description: 'You have logged in successfully.' });
+    setLoginError('');
+    setIsLoggingIn(true);
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: loginData.username, password: loginData.password }),
+      });
+      const data = await response.json();
+
+      if (data.success) {
+        localStorage.setItem('adminToken', data.token);
+        setIsAuthenticated(true);
+        setLoginData({ username: '', password: '' });
+        toast({ title: 'Welcome!', description: 'You have logged in successfully.' });
+      } else {
+        setLoginError(data.message || 'Invalid username or password');
+      }
+    } catch {
+      setLoginError('Unable to connect to server. Please try again.');
+    } finally {
+      setIsLoggingIn(false);
+    }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('adminToken');
+    setIsAuthenticated(false);
+    setLoginData({ username: '', password: '' });
+    toast({ title: 'Logged Out', description: 'You have been logged out.' });
+  };
+
+  // Change password
+  const [showChangePassword, setShowChangePassword] = useState(false);
+  const [passwordData, setPasswordData] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
+  const [passwordError, setPasswordError] = useState('');
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPasswordError('');
+
+    if (passwordData.newPassword.length < 6) {
+      setPasswordError('New password must be at least 6 characters');
+      return;
+    }
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      setPasswordError('New passwords do not match');
+      return;
+    }
+
+    setIsChangingPassword(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/change-password`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        body: JSON.stringify({
+          currentPassword: passwordData.currentPassword,
+          newPassword: passwordData.newPassword,
+        }),
+      });
+      const data = await response.json();
+      if (data.success) {
+        setShowChangePassword(false);
+        setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
+        toast({ title: 'Password Changed', description: 'Your password has been updated successfully.' });
+      } else {
+        setPasswordError(data.message || 'Failed to change password');
+      }
+    } catch {
+      setPasswordError('Unable to connect to server.');
+    } finally {
+      setIsChangingPassword(false);
     }
   };
 
@@ -240,7 +336,8 @@ const Admin = () => {
 
       const response = await fetch(`${API_BASE_URL}/notices`, {
         method: 'POST',
-        body: formData, // No Content-Type header - browser sets it with boundary
+        headers: getAuthHeaders(),
+        body: formData,
       });
       const data = await response.json();
       if (data.success) {
@@ -290,6 +387,7 @@ const Admin = () => {
 
       const response = await fetch(`${API_BASE_URL}/notices/${editingNotice.id}`, {
         method: 'PUT',
+        headers: getAuthHeaders(),
         body: formData,
       });
       const data = await response.json();
@@ -311,6 +409,7 @@ const Admin = () => {
     try {
       const response = await fetch(`${API_BASE_URL}/notices/${id}`, {
         method: 'DELETE',
+        headers: getAuthHeaders(),
       });
       const data = await response.json();
       if (data.success) {
@@ -382,6 +481,7 @@ const Admin = () => {
 
       const response = await fetch(`${API_BASE_URL}/gallery`, {
         method: 'POST',
+        headers: getAuthHeaders(),
         body: formData,
       });
 
@@ -470,6 +570,7 @@ const Admin = () => {
 
       const response = await fetch(`${API_BASE_URL}/gallery/${editingEvent.id}`, {
         method: 'PUT',
+        headers: getAuthHeaders(),
         body: formData,
       });
 
@@ -491,6 +592,7 @@ const Admin = () => {
     try {
       const response = await fetch(`${API_BASE_URL}/gallery/${id}`, {
         method: 'DELETE',
+        headers: getAuthHeaders(),
       });
       const data = await response.json();
       if (data.success) {
@@ -513,7 +615,7 @@ const Admin = () => {
     try {
       const response = await fetch(`${API_BASE_URL}/contact/${id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
         body: JSON.stringify({ isRead: !message.isRead }),
       });
       const data = await response.json();
@@ -529,6 +631,7 @@ const Admin = () => {
     try {
       const response = await fetch(`${API_BASE_URL}/contact/${id}`, {
         method: 'DELETE',
+        headers: getAuthHeaders(),
       });
       const data = await response.json();
       if (data.success) {
@@ -546,7 +649,7 @@ const Admin = () => {
     try {
       const response = await fetch(`${API_BASE_URL}/admissions/${id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
         body: JSON.stringify({ status }),
       });
       const data = await response.json();
@@ -566,6 +669,7 @@ const Admin = () => {
     try {
       const response = await fetch(`${API_BASE_URL}/admissions/${id}`, {
         method: 'DELETE',
+        headers: getAuthHeaders(),
       });
       const data = await response.json();
       if (data.success) {
@@ -593,14 +697,20 @@ const Admin = () => {
 
           <form onSubmit={handleLogin} className="bg-card rounded-xl p-8 shadow-school border border-border">
             <div className="space-y-4">
+              {loginError && (
+                <div className="p-3 rounded-lg bg-destructive/10 text-destructive text-sm text-center">
+                  {loginError}
+                </div>
+              )}
               <div className="space-y-2">
                 <Label htmlFor="username" className="text-foreground font-medium">Username</Label>
                 <Input
                   id="username"
                   placeholder="Enter username"
                   value={loginData.username}
-                  onChange={(e) => setLoginData({ ...loginData, username: e.target.value })}
+                  onChange={(e) => { setLoginData({ ...loginData, username: e.target.value }); setLoginError(''); }}
                   required
+                  disabled={isLoggingIn}
                   className="h-12"
                 />
               </div>
@@ -611,14 +721,15 @@ const Admin = () => {
                   type="password"
                   placeholder="Enter password"
                   value={loginData.password}
-                  onChange={(e) => setLoginData({ ...loginData, password: e.target.value })}
+                  onChange={(e) => { setLoginData({ ...loginData, password: e.target.value }); setLoginError(''); }}
                   required
+                  disabled={isLoggingIn}
                   className="h-12"
                 />
               </div>
             </div>
-            <Button type="submit" className="w-full mt-6 h-12 text-base font-semibold">
-              Login to Dashboard
+            <Button type="submit" className="w-full mt-6 h-12 text-base font-semibold" disabled={isLoggingIn}>
+              {isLoggingIn ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Logging in...</> : 'Login to Dashboard'}
             </Button>
             <div className="text-center">
               <a href="/" className="text-center text-sm text-muted-foreground mt-4">Go To Home Page</a>
@@ -696,8 +807,16 @@ const Admin = () => {
             </Button>
             <Button
               variant="ghost"
+              className="w-full justify-start gap-3"
+              onClick={() => setShowChangePassword(true)}
+            >
+              <KeyRound className="w-5 h-5" />
+              {isSidebarOpen && 'Change Password'}
+            </Button>
+            <Button
+              variant="ghost"
               className="w-full justify-start gap-3 text-destructive hover:text-destructive"
-              onClick={() => setIsAuthenticated(false)}
+              onClick={handleLogout}
             >
               <LogOut className="w-5 h-5" />
               {isSidebarOpen && 'Logout'}
@@ -705,6 +824,66 @@ const Admin = () => {
           </div>
         </div>
       </aside>
+
+      {/* Change Password Dialog */}
+      <Dialog open={showChangePassword} onOpenChange={setShowChangePassword}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Change Password</DialogTitle>
+            <DialogDescription>Enter your current password and choose a new one.</DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleChangePassword} className="space-y-4">
+            {passwordError && (
+              <div className="p-3 rounded-lg bg-destructive/10 text-destructive text-sm">
+                {passwordError}
+              </div>
+            )}
+            <div className="space-y-2">
+              <Label htmlFor="currentPassword">Current Password</Label>
+              <Input
+                id="currentPassword"
+                type="password"
+                value={passwordData.currentPassword}
+                onChange={(e) => { setPasswordData({ ...passwordData, currentPassword: e.target.value }); setPasswordError(''); }}
+                required
+                disabled={isChangingPassword}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="newPassword">New Password</Label>
+              <Input
+                id="newPassword"
+                type="password"
+                value={passwordData.newPassword}
+                onChange={(e) => { setPasswordData({ ...passwordData, newPassword: e.target.value }); setPasswordError(''); }}
+                required
+                disabled={isChangingPassword}
+                minLength={6}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="confirmPassword">Confirm New Password</Label>
+              <Input
+                id="confirmPassword"
+                type="password"
+                value={passwordData.confirmPassword}
+                onChange={(e) => { setPasswordData({ ...passwordData, confirmPassword: e.target.value }); setPasswordError(''); }}
+                required
+                disabled={isChangingPassword}
+                minLength={6}
+              />
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setShowChangePassword(false)} disabled={isChangingPassword}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isChangingPassword}>
+                {isChangingPassword ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Saving...</> : 'Change Password'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       {/* Main Content */}
       <main className={cn(
@@ -1112,7 +1291,7 @@ const Admin = () => {
                             <div key={photo.id} className="relative group">
                               <div className={`aspect-square rounded-lg overflow-hidden border-2 ${index === 0 ? 'border-primary' : 'border-border'}`}>
                                 <img
-                                  src={photo.src?.startsWith('/uploads') ? `http://localhost:5000${photo.src}` : photo.src}
+                                  src={getUploadUrl(photo.src)}
                                   alt={photo.alt}
                                   className="w-full h-full object-cover"
                                 />
@@ -1222,7 +1401,7 @@ const Admin = () => {
                         {/* Cover Photo Thumbnail */}
                         <div className="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0">
                           <img
-                            src={event.coverPhoto?.startsWith('/uploads') ? `http://localhost:5000${event.coverPhoto}` : event.coverPhoto}
+                            src={getUploadUrl(event.coverPhoto)}
                             alt={event.eventName}
                             className="w-full h-full object-cover"
                           />

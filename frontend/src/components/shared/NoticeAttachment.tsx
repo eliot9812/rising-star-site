@@ -2,17 +2,7 @@ import { FileText, Download, Eye, ZoomIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
 import ImageModal from './ImageModal';
-
-const API_BASE_URL = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000';
-
-// Helper to get full URL for attachments
-const getFullUrl = (url: string) => {
-  if (!url) return '';
-  if (url.startsWith('/uploads')) {
-    return `${API_BASE_URL}${url}`;
-  }
-  return url;
-};
+import { getUploadUrl as getFullUrl } from '@/lib/api';
 
 interface NoticeAttachmentProps {
   attachment: string;

@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { ArrowRight, Users, BookOpen, Award, GraduationCap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { schoolInfo, facilities } from '@/data/mockData';
+import SEO from "@/components/shared/SEO";
 
 // Use hero image from public folder for Home page only
 const heroImagePath = '/images/hero.jpg';
@@ -15,17 +16,24 @@ const Index = () => {
   ];
 
   return (
-    <div>
+    <div className="min-h-screen bg-background text-foreground">
+      <SEO
+        title="Best Boarding School in Sundarharaincha & Biratchowk"
+        description="The Rising English Boarding School — a top-rated boarding school in Sundarharaincha-10, Morang, near Biratchowk. 33+ years of academic excellence, modern facilities, Nursery to +2 education."
+        keywords="best school in sundarharaincha, top school in biratchowk, top 10 school biratchowk, best boarding school morang, rising english boarding school, school near biratchowk, english school sundarharaincha"
+        url="https://therisingenglishschool.com/"
+      />
+
       {/* Hero Section - Uses public/images/hero.jpg */}
       <section className="relative min-h-[80vh] flex items-center">
-        <div 
+        <div
           className="absolute inset-0 bg-cover bg-center"
           style={{ backgroundImage: `url(${heroImagePath})` }}
         >
           {/* Light gradient overlay for text contrast - allows hero image to be clearly visible */}
           <div className="absolute inset-0 bg-gradient-to-r from-foreground/60 via-foreground/40 to-transparent" />
         </div>
-        
+
         <div className="container-school relative z-10 py-20">
           <div className="max-w-3xl animate-fade-in">
             <span className="inline-block px-4 py-2 bg-primary-foreground/20 backdrop-blur-sm rounded-full text-primary-foreground text-sm font-medium mb-6">
@@ -35,7 +43,7 @@ const Index = () => {
               {schoolInfo.name}
             </h1>
             <p className="text-xl md:text-2xl text-primary-foreground/90 mb-8 leading-relaxed">
-              {schoolInfo.tagline}. We provide quality education that transforms lives and builds bright futures.
+              {schoolInfo.tagline}. A top boarding school in Sundarharaincha, near Biratchowk, Morang — providing quality education that transforms lives.
             </p>
             <div className="flex flex-wrap gap-4">
               <Button variant="hero" size="xl" asChild>
@@ -57,7 +65,7 @@ const Index = () => {
         <div className="container-school">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {stats.map((stat, index) => (
-              <div 
+              <div
                 key={index}
                 className="bg-card rounded-xl p-6 shadow-school text-center animate-slide-up"
                 style={{ animationDelay: `${index * 0.1}s` }}
@@ -83,7 +91,7 @@ const Index = () => {
                 Welcome to The Rising English Secondary Boarding School
               </h2>
               <p className="text-muted-foreground leading-relaxed mb-6">
-                Established in {schoolInfo.established}, The Rising English Secondary Boarding School has been a beacon of educational excellence in Nepal. Our commitment to holistic development ensures that every student receives not just academic knowledge, but also the values and skills needed for life.
+                Established in {schoolInfo.established}, The Rising English Secondary Boarding School in Sundarharaincha-10, Morang has been a beacon of educational excellence in the Biratchowk and Sundarharaincha region. Our commitment to holistic development ensures that every student receives not just academic knowledge, but also the values and skills needed for life.
               </p>
               <p className="text-muted-foreground leading-relaxed mb-8">
                 With state-of-the-art facilities, experienced faculty, and a nurturing environment, we prepare our students to face the challenges of tomorrow with confidence and competence.
@@ -96,22 +104,22 @@ const Index = () => {
               </Button>
             </div>
             <div className="grid grid-cols-2 gap-4">
-              <img 
+              <img
                 src="/images/school.jpg"
                 alt="School Building"
                 className="rounded-xl shadow-school w-full h-48 object-cover"
               />
-              <img 
+              <img
                 src="/images/school1.jpg"
                 alt="Students Learning"
                 className="rounded-xl shadow-school w-full h-48 object-cover mt-8"
               />
-              <img 
+              <img
                 src="/images/school5.jpg"
                 alt="Science Lab"
                 className="rounded-xl shadow-school w-full h-48 object-cover"
               />
-              <img 
+              <img
                 src="/images/school3.jpg"
                 alt="Library"
                 className="rounded-xl shadow-school w-full h-48 object-cover mt-8"
@@ -133,10 +141,10 @@ const Index = () => {
               We provide modern facilities to ensure the best learning environment for our students.
             </p>
           </div>
-          
+
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {facilities.map((facility, index) => (
-              <div 
+              <div
                 key={index}
                 className="bg-card rounded-xl p-6 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1 group"
               >

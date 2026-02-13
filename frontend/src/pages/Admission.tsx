@@ -6,8 +6,16 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { classes, schoolInfo } from '@/data/mockData';
-import { FileText, Calendar, CreditCard, CheckCircle } from 'lucide-react';
+import { FileText, Calendar, CreditCard, CheckCircle, Loader2, Download, HelpCircle } from 'lucide-react';
 import PageHero from '@/components/shared/PageHero';
+import { API_BASE_URL } from '@/lib/api';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import SEO from "@/components/shared/SEO";
 
 const Admission = () => {
   const { toast } = useToast();
@@ -17,11 +25,11 @@ const Admission = () => {
     email: '',
     address: '',
     classApplying: '',
-    message: '',
+    message: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsSubmitting(true);
 
@@ -38,22 +46,29 @@ const Admission = () => {
 
       if (data.success) {
         toast({
-          title: 'Application Submitted!',
-          description: 'We have received your admission inquiry. Our team will contact you soon.',
+          title: "Application Submitted",
+          description: "We have received your admission inquiry. We will contact you soon.",
         });
-        setFormData({ name: '', phone: '', email: '', address: '', classApplying: '', message: '' });
+        setFormData({
+          name: '',
+          phone: '',
+          email: '',
+          address: '',
+          classApplying: '',
+          message: ''
+        });
       } else {
         toast({
-          title: 'Error',
-          description: data.message || 'Failed to submit application. Please try again.',
-          variant: 'destructive',
+          title: "Submission Failed",
+          description: data.message || "Please try again later.",
+          variant: "destructive"
         });
       }
-    } catch (error) {
+    } catch {
       toast({
-        title: 'Error',
-        description: 'Failed to submit application. Please try again later.',
-        variant: 'destructive',
+        title: "Error",
+        description: "Failed to submit application. Please try again.",
+        variant: "destructive"
       });
     } finally {
       setIsSubmitting(false);
@@ -79,6 +94,12 @@ const Admission = () => {
 
   return (
     <div className="min-h-screen">
+      <SEO
+        title="Admissions Open | Best School in Sundarharaincha & Biratchowk"
+        description="Apply for admission at The Rising English Boarding School, Sundarharaincha-10, Morang. Nursery to +2 enrollment open near Biratchowk. Quality boarding school education."
+        keywords="admission sundarharaincha school, school admission biratchowk, nursery admission morang, best boarding school admission, TRESBS admission, apply school sundarharaincha"
+        url="https://therisingenglishschool.com/admission"
+      />
       <PageHero
         title="Admissions"
         subtitle={`Join the ${schoolInfo.shortName} family and embark on a journey of excellence`}

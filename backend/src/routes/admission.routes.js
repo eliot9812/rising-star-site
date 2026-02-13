@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Admission = require('../models/Admission');
+const authMiddleware = require('../middleware/auth.middleware');
 
 // POST /api/admissions - Submit an admission form (public)
 router.post('/', async (req, res) => {
@@ -39,8 +40,8 @@ router.post('/', async (req, res) => {
   }
 });
 
-// GET /api/admissions - Get all admissions (admin)
-router.get('/', async (req, res) => {
+// GET /api/admissions - Get all admissions (admin only)
+router.get('/', authMiddleware, async (req, res) => {
   try {
     const admissions = await Admission.findAll({
       order: [['createdAt', 'DESC']]
@@ -72,8 +73,8 @@ router.get('/', async (req, res) => {
   }
 });
 
-// PUT /api/admissions/:id - Update admission status (admin)
-router.put('/:id', async (req, res) => {
+// PUT /api/admissions/:id - Update admission status (admin only)
+router.put('/:id', authMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
     const { status } = req.body;
@@ -111,8 +112,8 @@ router.put('/:id', async (req, res) => {
   }
 });
 
-// DELETE /api/admissions/:id - Delete an admission (admin)
-router.delete('/:id', async (req, res) => {
+// DELETE /api/admissions/:id - Delete an admission (admin only)
+router.delete('/:id', authMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
 

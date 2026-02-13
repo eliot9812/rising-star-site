@@ -4,6 +4,7 @@ const path = require('path');
 const fs = require('fs');
 const { GalleryEvent, GalleryPhoto } = require('../models');
 const { galleryUpload } = require('../utils/upload');
+const authMiddleware = require('../middleware/auth.middleware');
 
 // GET all gallery events with photos
 router.get('/', async (req, res) => {
@@ -70,8 +71,8 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// POST create new gallery event with photos
-router.post('/', galleryUpload.fields([
+// POST create new gallery event with photos (admin only)
+router.post('/', authMiddleware, galleryUpload.fields([
   { name: 'coverPhoto', maxCount: 1 },
   { name: 'photos', maxCount: 50 }
 ]), async (req, res) => {
@@ -136,8 +137,8 @@ router.post('/', galleryUpload.fields([
   }
 });
 
-// PUT update gallery event
-router.put('/:id', galleryUpload.fields([
+// PUT update gallery event (admin only)
+router.put('/:id', authMiddleware, galleryUpload.fields([
   { name: 'coverPhoto', maxCount: 1 },
   { name: 'photos', maxCount: 50 }
 ]), async (req, res) => {
@@ -153,13 +154,20 @@ router.put('/:id', galleryUpload.fields([
     const { eventName, description, date, keepPhotoIds } = req.body;
 
     // Handle cover photo update
+    const uploadsDir = path.join(__dirname, '..', '..', 'uploads');
     let coverPhotoUrl = event.coverPhoto;
     if (req.files && req.files.coverPhoto && req.files.coverPhoto[0]) {
-      // Delete old cover photo if it exists and is from uploads
-      if (event.coverPhoto && event.coverPhoto.startsWith('/uploads/')) {
-        const oldPath = path.join(__dirname, '..', '..', event.coverPhoto);
-        if (fs.existsSync(oldPath)) {
-          fs.unlinkSync(oldPath);
+      // Delete old cover photo if it exists
+      if (event.coverPhoto) {
+        const oldFileName = path.basename(event.coverPhoto);
+        const oldPath = path.join(uploadsDir, 'gallery', oldFileName);
+        try {
+          if (fs.existsSync(oldPath)) {
+            fs.unlinkSync(oldPath);
+            console.log('Deleted old cover photo:', oldPath);
+          }
+        } catch (fileErr) {
+          console.error('Failed to delete old cover photo:', oldPath, fileErr.message);
         }
       }
       coverPhotoUrl = `/uploads/gallery/${req.files.coverPhoto[0].filename}`;
@@ -187,10 +195,16 @@ router.put('/:id', galleryUpload.fields([
     for (const photo of existingPhotos) {
       if (!idsToKeep.includes(photo.id.toString())) {
         // Delete the file from disk
-        if (photo.src && photo.src.startsWith('/uploads/')) {
-          const filePath = path.join(__dirname, '..', '..', photo.src);
-          if (fs.existsSync(filePath)) {
-            fs.unlinkSync(filePath);
+        if (photo.src) {
+          const photoFileName = path.basename(photo.src);
+          const filePath = path.join(uploadsDir, 'gallery', photoFileName);
+          try {
+            if (fs.existsSync(filePath)) {
+              fs.unlinkSync(filePath);
+              console.log('Deleted removed photo:', filePath);
+            }
+          } catch (fileErr) {
+            console.error('Failed to delete photo file:', filePath, fileErr.message);
           }
         }
         await photo.destroy();
@@ -232,8 +246,8 @@ router.put('/:id', galleryUpload.fields([
   }
 });
 
-// DELETE gallery event
-router.delete('/:id', async (req, res) => {
+// DELETE gallery event (admin only)
+router.delete('/:id', authMiddleware, async (req, res) => {
   try {
     const event = await GalleryEvent.findByPk(req.params.id, {
       include: [{ model: GalleryPhoto, as: 'photos' }]
@@ -243,21 +257,35 @@ router.delete('/:id', async (req, res) => {
       return res.status(404).json({ success: false, message: 'Gallery event not found' });
     }
 
+    const uploadsDir = path.join(__dirname, '..', '..', 'uploads');
+
     // Delete cover photo file
-    if (event.coverPhoto && event.coverPhoto.startsWith('/uploads/')) {
-      const coverPath = path.join(__dirname, '..', '..', event.coverPhoto);
-      if (fs.existsSync(coverPath)) {
-        fs.unlinkSync(coverPath);
+    if (event.coverPhoto) {
+      const coverFileName = path.basename(event.coverPhoto);
+      const coverPath = path.join(uploadsDir, 'gallery', coverFileName);
+      try {
+        if (fs.existsSync(coverPath)) {
+          fs.unlinkSync(coverPath);
+          console.log('Deleted cover photo:', coverPath);
+        }
+      } catch (fileErr) {
+        console.error('Failed to delete cover photo file:', coverPath, fileErr.message);
       }
     }
 
     // Delete photo files
-    if (event.photos) {
+    if (event.photos && event.photos.length > 0) {
       for (const photo of event.photos) {
-        if (photo.src && photo.src.startsWith('/uploads/')) {
-          const filePath = path.join(__dirname, '..', '..', photo.src);
-          if (fs.existsSync(filePath)) {
-            fs.unlinkSync(filePath);
+        if (photo.src) {
+          const photoFileName = path.basename(photo.src);
+          const filePath = path.join(uploadsDir, 'gallery', photoFileName);
+          try {
+            if (fs.existsSync(filePath)) {
+              fs.unlinkSync(filePath);
+              console.log('Deleted photo:', filePath);
+            }
+          } catch (fileErr) {
+            console.error('Failed to delete photo file:', filePath, fileErr.message);
           }
         }
       }
@@ -273,8 +301,8 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
-// POST add photos to existing event
-router.post('/:id/photos', galleryUpload.array('photos', 50), async (req, res) => {
+// POST add photos to existing event (admin only)
+router.post('/:id/photos', authMiddleware, galleryUpload.array('photos', 50), async (req, res) => {
   try {
     const event = await GalleryEvent.findByPk(req.params.id);
 
@@ -307,8 +335,8 @@ router.post('/:id/photos', galleryUpload.array('photos', 50), async (req, res) =
   }
 });
 
-// DELETE specific photo from event
-router.delete('/:eventId/photos/:photoId', async (req, res) => {
+// DELETE specific photo from event (admin only)
+router.delete('/:eventId/photos/:photoId', authMiddleware, async (req, res) => {
   try {
     const photo = await GalleryPhoto.findOne({
       where: {
@@ -322,10 +350,17 @@ router.delete('/:eventId/photos/:photoId', async (req, res) => {
     }
 
     // Delete the file from disk
-    if (photo.src && photo.src.startsWith('/uploads/')) {
-      const filePath = path.join(__dirname, '..', '..', photo.src);
-      if (fs.existsSync(filePath)) {
-        fs.unlinkSync(filePath);
+    if (photo.src) {
+      const uploadsDir = path.join(__dirname, '..', '..', 'uploads');
+      const photoFileName = path.basename(photo.src);
+      const filePath = path.join(uploadsDir, 'gallery', photoFileName);
+      try {
+        if (fs.existsSync(filePath)) {
+          fs.unlinkSync(filePath);
+          console.log('Deleted photo:', filePath);
+        }
+      } catch (fileErr) {
+        console.error('Failed to delete photo file:', filePath, fileErr.message);
       }
     }
 

@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { NoticeAttachmentData } from '@/data/mockData';
+import { getUploadUrl } from '@/lib/api';
 
 interface FileWithPreview {
   id: string;
@@ -125,7 +126,7 @@ const MultiFileUploader = ({
               >
                 {attachment.type === 'image' ? (
                   <img
-                    src={attachment.url.startsWith('/uploads') ? `${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000'}${attachment.url}` : attachment.url}
+                    src={getUploadUrl(attachment.url)}
                     alt={attachment.name}
                     className="w-12 h-12 object-cover rounded"
                   />

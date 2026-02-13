@@ -7,20 +7,39 @@ require('dotenv').config();
 const app = express();
 
 
-app.use(cors({
-  origin: [
+const allowedOrigins = process.env.CORS_ORIGINS
+  ? process.env.CORS_ORIGINS.split(',').map(o => o.trim())
+  : [
     'http://localhost:5173',
     'http://localhost:8080',
     'https://therisingenglishschool.com',
     'https://www.therisingenglishschool.com',
-    'http://therisingenglishschool.com' // In case SSL is not yet active
-  ],
+    'http://therisingenglishschool.com'
+  ];
+
+app.use(cors({
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+
+    // Check if origin is allowed
+    if (allowedOrigins.indexOf(origin) !== -1 || origin.includes('therisingenglishschool.com')) {
+      return callback(null, true);
+    } else {
+      // For development/debugging, you might want to log this
+      // console.log('Blocked by CORS:', origin);
+      return callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
+
+// Also serve uploads under /api/uploads so it works through cPanel's reverse proxy
+app.use('/api/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 
 const routes = require('./routes');
 app.use('/api', routes);

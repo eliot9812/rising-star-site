@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const ContactMessage = require('../models/ContactMessage');
+const authMiddleware = require('../middleware/auth.middleware');
 
 // POST /api/contact - Submit a contact message (public)
 router.post('/', async (req, res) => {
@@ -37,8 +38,8 @@ router.post('/', async (req, res) => {
   }
 });
 
-// GET /api/contact - Get all contact messages (admin)
-router.get('/', async (req, res) => {
+// GET /api/contact - Get all contact messages (admin only)
+router.get('/', authMiddleware, async (req, res) => {
   try {
     const messages = await ContactMessage.findAll({
       order: [['createdAt', 'DESC']]
@@ -68,8 +69,8 @@ router.get('/', async (req, res) => {
   }
 });
 
-// PUT /api/contact/:id - Update message (mark as read/unread)
-router.put('/:id', async (req, res) => {
+// PUT /api/contact/:id - Update message (admin only)
+router.put('/:id', authMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
     const { isRead } = req.body;
@@ -98,8 +99,8 @@ router.put('/:id', async (req, res) => {
   }
 });
 
-// DELETE /api/contact/:id - Delete a message (admin)
-router.delete('/:id', async (req, res) => {
+// DELETE /api/contact/:id - Delete a message (admin only)
+router.delete('/:id', authMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
 

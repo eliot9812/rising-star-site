@@ -2,8 +2,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { Notice } from '@/data/mockData';
 import { Bell } from 'lucide-react';
-
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+import { API_BASE_URL } from '@/lib/api';
 
 const NewsTicker = () => {
   const navigate = useNavigate();

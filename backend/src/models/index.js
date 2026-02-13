@@ -1,4 +1,5 @@
 const { sequelize } = require('../config/database');
+const Admin = require('./Admin');
 const ContactMessage = require('./ContactMessage');
 const Admission = require('./Admission');
 const Notice = require('./Notice');
@@ -30,6 +31,7 @@ GalleryPhoto.belongsTo(GalleryEvent, {
 
 module.exports = {
   sequelize,
+  Admin,
   ContactMessage,
   Admission,
   Notice,

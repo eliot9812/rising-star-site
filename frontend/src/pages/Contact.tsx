@@ -5,12 +5,19 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { schoolInfo } from '@/data/mockData';
-import { MapPin, Phone, Mail, Clock, Send } from 'lucide-react';
+import { MapPin, Phone, Mail, Clock, Send, Loader2 } from 'lucide-react'; // Added Loader2, kept Clock
 import PageHero from '@/components/shared/PageHero';
+import { API_BASE_URL } from '@/lib/api';
+import SEO from "@/components/shared/SEO"; // Added SEO import
 
 const Contact = () => {
   const { toast } = useToast();
-  const [formData, setFormData] = useState({ name: '', email: '', phone: '', message: '' });
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    message: ''
+  });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -18,7 +25,7 @@ const Contact = () => {
     setIsSubmitting(true);
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/contact`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/contact`, { // Changed API URL source
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -31,9 +38,9 @@ const Contact = () => {
       if (data.success) {
         toast({
           title: 'Message Sent!',
-          description: 'Thank you for contacting us. We will get back to you soon.',
+          description: 'Thank you for contacting us. We will get back to you shortly.', // Modified description
         });
-        setFormData({ name: '', email: '', phone: '', message: '' });
+        setFormData({ name: '', email: '', phone: '', message: '' }); // Reset formData with new structure
       } else {
         toast({
           title: 'Error',
@@ -61,6 +68,12 @@ const Contact = () => {
 
   return (
     <div className="min-h-screen">
+      <SEO
+        title="Contact Us | School in Sundarharaincha, Morang"
+        description="Contact The Rising English Boarding School, Sundarharaincha-10, Morang. Get directions, phone number, email, and office hours. Located near Biratchowk."
+        keywords="contact rising english boarding school, school phone sundarharaincha, school address biratchowk, school email morang, TRESBS contact"
+        url="https://therisingenglishschool.com/contact"
+      />
       <PageHero
         title="Contact Us"
         subtitle="We'd love to hear from you. Get in touch with us today."
