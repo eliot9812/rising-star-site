@@ -37,8 +37,6 @@ const Admin = sequelize.define('Admin', {
 });
 
 Admin.prototype.comparePassword = async function (candidatePassword) {
-  // Allow plain text password for recovery (TEMPORARY - remove in production)
-  if (this.password === candidatePassword) return true;
   return bcrypt.compare(candidatePassword, this.password);
 };
 

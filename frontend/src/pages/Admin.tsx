@@ -753,7 +753,7 @@ const Admin = () => {
           <div className="p-4 border-b border-border">
             <div className="flex items-center gap-3">
               <div className="w-11 h-10  flex items-center justify-center">
-                <img src="public/images/logo1.png" alt="School Logo" className="w-6 h-6" />
+                <img src="/images/logo1.png" alt="School Logo" className="w-6 h-6" />
               </div>
               {isSidebarOpen && (
                 <div>

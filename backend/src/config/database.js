@@ -16,7 +16,14 @@ const sequelize = new Sequelize(
       acquire: 30000,
       idle: 10000
     },
-    timezone: '+05:45'     // Nepal Time
+    timezone: '+05:45',    // Nepal Time
+    dialectOptions: {
+      charset: 'utf8mb4',
+    },
+    define: {
+      charset: 'utf8mb4',
+      collate: 'utf8mb4_unicode_ci'
+    }
   }
 );
 

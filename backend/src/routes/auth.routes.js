@@ -87,69 +87,6 @@ router.get('/verify', async (req, res) => {
   }
 });
 
-// DEBUG ROUTE - Check if admin exists and test password
-router.get('/debug-check', async (req, res) => {
-  try {
-    const admin = await Admin.findOne({ where: { username: 'admin' } });
-    if (!admin) {
-      return res.json({
-        success: false,
-        message: 'Admin user "admin" NOT FOUND in database.'
-      });
-    }
-
-    const passwordCandidate = 'RisingStar@2024';
-    const isMatch = await admin.comparePassword(passwordCandidate);
-
-    res.json({
-      success: true,
-      message: 'Admin user found.',
-      debugInfo: {
-        id: admin.id,
-        username: admin.username,
-        storedPasswordHash: admin.password.substring(0, 15) + '...', // Masked for security
-        passwordLength: admin.password.length,
-        isPasswordMatch: isMatch,
-        note: isMatch ? 'Login should work!' : 'Password mismatch. Check hash or plain text.'
-      }
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: 'Database error',
-      error: error.message
-    });
-  }
-});
-
-// DEBUG ROUTE - Create admin user if missing
-router.get('/create-admin', async (req, res) => {
-  try {
-    const existing = await Admin.findOne({ where: { username: 'admin' } });
-    if (existing) {
-      return res.json({ success: false, message: 'Admin user already exists' });
-    }
-
-    const newAdmin = await Admin.create({
-      username: 'admin',
-      password: 'RisingStar@2024' // Will be hashed by hooks (or stored plain if hooks disabled/bypassed)
-    });
-
-    res.json({
-      success: true,
-      message: 'Admin user created successfully',
-      username: 'admin',
-      password: 'RisingStar@2024'
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: 'Failed to create admin',
-      error: error.message
-    });
-  }
-});
-
 // PUT /api/auth/change-password (admin only)
 router.put('/change-password', authMiddleware, async (req, res) => {
   try {

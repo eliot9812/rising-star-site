@@ -3,9 +3,20 @@ const path = require('path');
 const fs = require('fs');
 const { v4: uuidv4 } = require('uuid');
 
-// Ensure uploads directories exist
-const noticesUploadsDir = path.join(__dirname, '..', '..', 'uploads', 'notices');
-const galleryUploadsDir = path.join(__dirname, '..', '..', 'uploads', 'gallery');
+// Resolve uploads base directory.
+// On cPanel, set UPLOADS_PATH in .env to the absolute path of your backend folder,
+// e.g. UPLOADS_PATH=/home/avyantat/therising-backend
+// If not set, falls back to the backend root relative to this file.
+const uploadsBase = process.env.UPLOADS_PATH
+  ? path.resolve(process.env.UPLOADS_PATH)
+  : path.join(__dirname, '..', '..');
+
+const noticesUploadsDir = path.join(uploadsBase, 'uploads', 'notices');
+const galleryUploadsDir = path.join(uploadsBase, 'uploads', 'gallery');
+
+console.log('Upload directories:');
+console.log('  Notices:', noticesUploadsDir);
+console.log('  Gallery:', galleryUploadsDir);
 
 if (!fs.existsSync(noticesUploadsDir)) {
   fs.mkdirSync(noticesUploadsDir, { recursive: true });
@@ -17,6 +28,7 @@ if (!fs.existsSync(galleryUploadsDir)) {
 // Configure storage for notices
 const noticesStorage = multer.diskStorage({
   destination: (req, file, cb) => {
+    fs.mkdirSync(noticesUploadsDir, { recursive: true });
     cb(null, noticesUploadsDir);
   },
   filename: (req, file, cb) => {
@@ -29,6 +41,7 @@ const noticesStorage = multer.diskStorage({
 // Configure storage for gallery
 const galleryStorage = multer.diskStorage({
   destination: (req, file, cb) => {
+    fs.mkdirSync(galleryUploadsDir, { recursive: true });
     cb(null, galleryUploadsDir);
   },
   filename: (req, file, cb) => {

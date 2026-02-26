@@ -5,11 +5,18 @@ import PageHero from '@/components/shared/PageHero';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
+// Backend base URL without /api — where uploads are served from
+const UPLOADS_BASE =
+  import.meta.env.VITE_UPLOADS_URL ||
+  (import.meta.env.VITE_API_URL
+    ? (import.meta.env.VITE_API_URL as string).replace(/\/api$/, '')
+    : 'http://localhost:5000');
+
 // Helper to get full URL for gallery images
 const getFullUrl = (url: string) => {
   if (!url) return '';
   if (url.startsWith('/uploads')) {
-    return `${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}${url}`;
+    return `${UPLOADS_BASE}${url}`;
   }
   return url;
 };

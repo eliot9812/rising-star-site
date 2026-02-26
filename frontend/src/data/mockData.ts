@@ -261,7 +261,7 @@ export const schoolInfo = {
 };
 
 export const chairman = {
-  name: 'Chairman Name',
+  name: 'Surendra Bdr. Thapa',
   position: 'Chairman',
   image: '/images/chairman.jpg',
   message: `Dear Stuends, I firmly believe that one of the most importand ages in our life is the prime youth which we all invest in education and such a crucial moment obviously raised expectations about the multiple forms of returns during the rest of our lives.
@@ -270,7 +270,7 @@ Here, I would like to say that just as the selection of a right field of study f
 
 Management is about more than what we assume as a comfortable corporate office the big swivel chairs and a handsome salary and the accompanying perk, it is all about understanding the delicate balance that exists among people, raw material, information, technology, market force and national laws. The courses must take into account these factors. Additionaly, there must be a spotlight on the grooming of the students total personality so that they may become confident, acceptable and effective leaders in the globalized business environment.
 
-On this upgrade note, I wish the forth coming students oa time of great achievement at TREBS. The college, I assure leaves no stone unturned in putting in cent percent effort in unaveling and maximizing the potential of its students.`,
+On this upgrade note, I wish the forth coming students time of great achievement at TREBS. The college, I assure leaves no stone unturned in putting in cent percent effort in unaveling and maximizing the potential of its students.`,
 };
 
 export const principal = {

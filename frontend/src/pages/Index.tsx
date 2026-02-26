@@ -19,7 +19,7 @@ const Index = () => {
     <div className="min-h-screen bg-background text-foreground">
       <SEO
         title="Best Boarding School in Sundarharaincha & Biratchowk"
-        description="The Rising English Boarding School — a top-rated boarding school in Sundarharaincha-10, Morang, near Biratchowk. 33+ years of academic excellence, modern facilities, Nursery to +2 education."
+        description="The Rising English Boarding School - a top-rated boarding school in Sundarharaincha-10, Morang, near Biratchowk. 33+ years of academic excellence, modern facilities, Nursery to +2 education."
         keywords="best school in sundarharaincha, top school in biratchowk, top 10 school biratchowk, best boarding school morang, rising english boarding school, school near biratchowk, english school sundarharaincha"
         url="https://therisingenglishschool.com/"
       />
@@ -43,7 +43,7 @@ const Index = () => {
               {schoolInfo.name}
             </h1>
             <p className="text-xl md:text-2xl text-primary-foreground/90 mb-8 leading-relaxed">
-              {schoolInfo.tagline}. A top boarding school in Sundarharaincha, near Biratchowk, Morang — providing quality education that transforms lives.
+              {schoolInfo.tagline}. A top boarding school in Sundarharaincha, near Biratchowk, Morang - providing quality education that transforms lives.
             </p>
             <div className="flex flex-wrap gap-4">
               <Button variant="hero" size="xl" asChild>

@@ -1,8 +1,28 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useState, useRef } from 'react';
 import { GraduationCap, Phone, Mail, MapPin, Facebook, Twitter, Instagram, Youtube } from 'lucide-react';
 import { schoolInfo } from '@/data/mockData';
 
 const Footer = () => {
+  const navigate = useNavigate();
+  const tapCount = useRef(0);
+  const tapTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleLogoTap = () => {
+    tapCount.current += 1;
+    if (tapTimer.current) clearTimeout(tapTimer.current);
+
+    if (tapCount.current >= 5) {
+      tapCount.current = 0;
+      navigate('/admin');
+      return;
+    }
+
+    tapTimer.current = setTimeout(() => {
+      tapCount.current = 0;
+    }, 2000);
+  };
+
   return (
     <footer className="bg-foreground text-background">
       <div className="container-school section-padding">
@@ -10,10 +30,11 @@ const Footer = () => {
           {/* School Info */}
           <div className="lg:col-span-1">
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 flex items-center justify-center">
+              <div
+                className="w-12 h-12 flex items-center justify-center cursor-pointer select-none"
+                onClick={handleLogoTap}
+              >
                 <img src="/images/logo1.png" alt="Logo" />
-
-                {/* <GraduationCap className="w-7 h-7 text-primary-foreground" /> */}
               </div>
               <div>
                 <h3 className="font-heading font-bold text-lg">The Rising</h3>
